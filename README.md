@@ -23,70 +23,109 @@ El proyecto se organiza de la siguiente manera:
 └── README.md
 ```
 
-## MDIO
+### Controlador y Periférico MDIO
 
-El protocolo MDIO (Interfaz de Gestión de Dispositivos Independientes) es un protocolo de comunicación serial utilizado en redes Ethernet para la gestión y configuración de dispositivos. Permite a una estación de gestión (como un switch o un router) leer y escribir registros de control y estado en dispositivos compatibles con MDIO, como transceptores de capa física (PHY).
-
-Una transacción MDIO consta de 32 bits y tiene la siguiente estructura:
-
-| Bit(s) | Campo       | Descripción                                                  |
-|--------|--------------|---------------------------------------------------------------|
-| 31-30  | Código de operación | 00: Lectura, 01: Escritura                                |
-| 29-25  | Reservado   | Debe ser 0                                                  |
-| 24-21  | PHY Address | Dirección del dispositivo PHY                               |
-| 20-16  | Reg Address | Dirección del registro a leer o escribir en el dispositivo PHY |
-| 15-0   | Data        | Datos a escribir (en transacciones de escritura) o sin usar (en transacciones de lectura) |
+#### Protocolo MDIO
+- Formato de transacción serial de 32 bits
+- Estructura:
+  1. Bits 31-30: Código de Operación (00: Lectura, 01: Escritura)
+  2. Bits 29-25: Reservado (0)
+  3. Bits 24-21: Dirección del PHY (0-31)
+  4. Bits 20-16: Dirección del Registro (0-31)
+  5. Bits 15-0: Datos (Datos de Escritura o sin usar para Lectura)
+- Utiliza señales MDC (Reloj) y MDIO (Datos)
+- Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC
+- En Escritura, se envían los 32 bits de la trama al dispositivo PHY
+- En Lectura, se envían los primeros 16 bits, y el PHY responde con los 16 bits restantes (datos leídos)
 
 ### Controlador
-
-El controlador es el módulo principal del receptor de transacciones MDIO. Es responsable de recibir las transacciones MDIO, decodificarlas y realizar las operaciones de lectura o escritura correspondientes en el periférico MDIO.
-
-Especificaciones:
-
-- Recibe las señales `MDC` (reloj MDIO), `RESET`, `MDIO_OUT` (datos seriales de entrada) y `MDIO_OE` (habilitación de datos de entrada).
-- Genera las señales `MDIO_DONE` (indicador de transacción completada), `MDIO_IN` (datos seriales de salida), `ADDR` (dirección de registro), `WR_DATA` (datos a escribir), `RD_DATA` (datos leídos) y `WR_STB` (indicador de operación de escritura).
-- Implementa la máquina de estados para decodificar y procesar las transacciones MDIO.
-- Realiza operaciones de lectura y escritura en el periférico MDIO según las transacciones recibidas.
+- Recibe:
+  1. `MDC`: Reloj para el MDIO. Flanco activo en flanco creciente.
+  2. `RESET`: Reinicio del controlador. Si RESET=1, funciona normalmente. Si RESET=0, vuelve a estado inicial y todas las salidas a 0.
+  3. `MDIO_OUT`: Entrada serial. Debe provenir de un generador MDIO o modelar su comportamiento.
+  4. `MDIO_OE`: Habilitación de MDIO_OUT. Debe detectar si el valor de MDIO_OUT es válido y habilitado.
+- Genera:
+  1. `MDIO_DONE`: Strobe (pulso de 1 ciclo de reloj). Indica que se completó una transacción MDIO.
+  2. `MDIO_IN`: Salida serie. Durante operación de lectura, envía el dato almacenado en REGADDR durante los últimos 16 ciclos.
+  3. `ADDR[4:0]`: Dirección del registro a leer/escribir.
+  4. `WR_DATA[15:0]`: Datos a escribir en la posición de memoria indicada por ADDR cuando MDIO_DONE=1 y WR_STB=1.
+  5. `RD_DATA[15:0]`: Valor leído desde la memoria, a más tardar 2 ciclos de MDC después de MDIO_DONE=1 y WR_STB=0.
+  6. `WR_STB`: Indica que WR_DATA y WR_ADDR son válidos y deben escribirse a la memoria.
 
 ### Periférico
+- Recibe:
+  1. `ADDR[4:0]`: Dirección del registro a leer/escribir.
+  2. `WR_DATA[15:0]`: Datos a escribir.
+  3. `RD_DATA[15:0]`: Salida de datos leídos.
+  4. `WR_STB`: Indica operación de escritura cuando WR_STB=1.
+- Implementa memoria interna (por ejemplo, arreglo) para almacenar registros
+- Para Escritura:
+  1. Recibe dirección de registro (ADDR) y datos (WR_DATA)
+  2. En WR_STB=1, escribe WR_DATA en la posición de memoria indicada por ADDR
+- Para Lectura:
+  1. Recibe dirección de registro (ADDR)
+  2. Lee datos de la posición de memoria indicada por ADDR
+  3. Coloca los datos leídos en RD_DATA
 
-El periférico MDIO es un módulo que simula el comportamiento de un dispositivo MDIO real, como un transceptor de capa física (PHY). Implementa una memoria interna donde se almacenan los registros de control y estado.
+### Banco de Pruebas del Controlador
+- Genera señales de entrada: MDC, RESET, MDIO_OUT, MDIO_OE
+- Verifica señales de salida: MDIO_DONE, MDIO_IN, ADDR, WR_DATA, RD_DATA, WR_STB
+- Pruebas:
+  1. Inicialización y reset
+  2. Transacciones de Escritura válidas e inválidas:
+    * Diferentes combinaciones de dirección de registro y datos
+    * Verificación de MDIO_DONE, WR_STB, WR_DATA, ADDR
+  3. Transacciones de Lectura válidas e inválidas:
+    * Diferentes combinaciones de dirección de registro
+    * Verificación de MDIO_DONE, MDIO_IN, RD_DATA, ADDR
+  4. Cobertura de código: ejercitar todas las líneas y condiciones
 
-Especificaciones:
+### Banco de Pruebas del Periférico
+- Genera señales de entrada: ADDR, WR_DATA, WR_STB
+- Verifica señales de salida: RD_DATA
+- Pruebas:
+  1. Inicialización y reset
+  2. Operaciones de Escritura válidas e inválidas:
+    * Diferentes combinaciones de dirección de registro y datos
+    * Verificación de datos escritos en memoria
+  3. Operaciones de Lectura válidas e inválidas:
+    * Diferentes combinaciones de dirección de registro
+    * Verificación de datos leídos de memoria
+  4. Cobertura de código: ejercitar todas las líneas y condiciones
 
-- Recibe las señales `ADDR` (dirección de registro), `WR_DATA` (datos a escribir), `RD_DATA` (datos a leer) y `WR_STB` (indicador de operación de escritura) del controlador.
-- Implementa una memoria interna para almacenar los registros de control y estado.
-- Realiza operaciones de lectura y escritura en los registros según las señales recibidas del controlador.
+### Banco de Pruebas de MDIO
+- Instancia del Controlador y Periférico
+- Genera señales de entrada del Controlador: MDC, RESET, MDIO_OUT, MDIO_OE
+- Verifica señales de salida del Controlador y Periférico
+- Pruebas:
+  1. Inicialización y reset de Controlador y Periférico
+  2. Transacciones MDIO completas de Escritura y Lectura válidas e inválidas:
+    * Diferentes combinaciones de dirección de PHY, dirección de registro y datos
+    * Verificación de decodificación y procesamiento de tramas
+    * Verificación de datos escritos y leídos en Periférico
+    * Verificación de señales de control y datos (MDIO_DONE, WR_STB, MDIO_IN, WR_DATA, RD_DATA)
+  3. Cobertura de código para Controlador y Periférico
+  4. Interoperabilidad entre Controlador y Periférico
+  5. Pruebas de estrés y rendimiento:
+    * Gran cantidad de transacciones MDIO consecutivas
+    * Verificación de manejo correcto del sistema
+  6. Escenarios de error y condiciones de borde:
+    * Tramas MDIO incorrectas
+    * Interrupciones durante transacciones
 
-## Bancos de pruebas
-
-El proyecto incluye tres bancos de pruebas para verificar el correcto funcionamiento de los módulos:
-
-### Banco de pruebas del controlador
-
-El archivo `MDIO/controller/controller_tb.v` contiene el banco de pruebas para el módulo controlador. Este banco de pruebas genera diferentes escenarios de transacciones MDIO y verifica que el controlador responda correctamente.
-
-### Banco de pruebas del periférico
-
-El archivo `MDIO/peripheral/peripheral_tb.v` contiene el banco de pruebas para el módulo periférico. Este banco de pruebas genera diferentes operaciones de lectura y escritura en los registros del periférico y verifica que los datos se almacenen y lean correctamente.
-
-### Banco de pruebas de MDIO
-
-El archivo `MDIO/MDIO_tb.v` contiene un banco de pruebas más general que verifica el correcto funcionamiento del receptor de transacciones MDIO completo, incluyendo la interacción entre el controlador y el periférico.
-
-## Uso del makefile para probar los módulos y el protocolo MDIO
+### Uso del makefile para probar los módulos y el protocolo MDIO
 
 El proyecto incluye un archivo `Makefile` que facilita la compilación y ejecución de los bancos de pruebas. Para ejecutar los bancos de pruebas, sigue estos pasos:
 
 1. Abre una terminal en el directorio raíz del proyecto.
 2. Ejecuta el comando `make` para compilar todos los módulos y bancos de pruebas.
-3. Para ejecutar el banco de pruebas del controlador, ejecuta el comando `make run_controller_tb`.
-4. Para ejecutar el banco de pruebas del periférico, ejecuta el comando `make run_peripheral_tb`.
-5. Para ejecutar el banco de pruebas de MDIO, ejecuta el comando `make run_mdio_tb`.
+3. Para ejecutar el banco de pruebas del controlador, ejecuta el comando `make controller`.
+4. Para ejecutar el banco de pruebas del periférico, ejecuta el comando `make peripheral`.
+5. Para ejecutar el banco de pruebas de MDIO, ejecuta el comando `make mdio`.
 
 Después de ejecutar cada banco de pruebas, se generará un archivo `*.vcd` que contiene la traza de la simulación. Puedes abrir este archivo en un visor de formas de onda, como GTKWave, para visualizar los resultados.
 
-## Fuentes y software usado
+### Fuentes y software usado
 
 - Estándar IEEE 802.3 (cláusula 22)
 - Icarus Verilog (compilador de Verilog)
