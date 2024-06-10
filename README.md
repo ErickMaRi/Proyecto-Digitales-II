@@ -29,13 +29,14 @@ El proyecto se organiza de la siguiente manera:
 - Formato de transacción serial de 32 bits
 - Estructura:
 
-| Bit(s) | Campo       | Descripción                                                  |
-|--------|--------------|---------------------------------------------------------------|
-| 31-30  | Código de operación | 00: Lectura, 01: Escritura                                |
-| 29-25  | Reservado   | Debe ser 0                                                  |
-| 24-21  | PHY Address | Dirección del dispositivo PHY                               |
-| 20-16  | Reg Address | Dirección del registro a leer o escribir en el dispositivo PHY |
-| 15-0   | Data        | Datos a escribir (en transacciones de escritura) o sin usar (en transacciones de lectura) |
+| Bit(s) | Campo             | Descripción                                                                  |
+|--------|-------------------|------------------------------------------------------------------------------|
+| 31-30  | ST (Start)        | Código de inicio de trama (01 para Clause 22)                                 |
+| 29-28  | Código de operación | 10: Lectura, 01: Escritura                                                    |
+| 27-23  | PHY Address       | Dirección del dispositivo PHY                                                 |
+| 22-18  | Reg Address       | Dirección del registro a leer o escribir en el dispositivo PHY                |
+| 17-16  | TA (Turnaround)   | Tiempo de espera para cambiar la propiedad del bus                            |
+| 15-0   | Data              | Datos a escribir (en transacciones de escritura) o datos leídos (en transacciones de lectura) |
 
 - Utiliza señales MDC (Reloj) y MDIO (Datos)
 - Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC
