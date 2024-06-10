@@ -28,11 +28,15 @@ El proyecto se organiza de la siguiente manera:
 #### Protocolo MDIO
 - Formato de transacción serial de 32 bits
 - Estructura:
-  1. Bits 31-30: Código de Operación (00: Lectura, 01: Escritura)
-  2. Bits 29-25: Reservado (0)
-  3. Bits 24-21: Dirección del PHY (0-31)
-  4. Bits 20-16: Dirección del Registro (0-31)
-  5. Bits 15-0: Datos (Datos de Escritura o sin usar para Lectura)
+
+| Bit(s) | Campo       | Descripción                                                  |
+|--------|--------------|---------------------------------------------------------------|
+| 31-30  | Código de operación | 00: Lectura, 01: Escritura                                |
+| 29-25  | Reservado   | Debe ser 0                                                  |
+| 24-21  | PHY Address | Dirección del dispositivo PHY                               |
+| 20-16  | Reg Address | Dirección del registro a leer o escribir en el dispositivo PHY |
+| 15-0   | Data        | Datos a escribir (en transacciones de escritura) o sin usar (en transacciones de lectura) |
+
 - Utiliza señales MDC (Reloj) y MDIO (Datos)
 - Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC
 - En Escritura, se envían los 32 bits de la trama al dispositivo PHY
