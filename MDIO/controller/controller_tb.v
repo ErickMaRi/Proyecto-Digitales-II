@@ -16,7 +16,7 @@ controller_instance controller_inst (
 
 // Inicialización de señales
 initial begin
-    $dumpfile("controller/controller.vcd");
+    $dumpfile("controller/sim.vcd");
     $dumpvars(0, controller_tb);
 
     clk = 0;

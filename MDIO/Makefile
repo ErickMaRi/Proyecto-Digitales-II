@@ -1,40 +1,37 @@
-# Compiler
-IVERILOG = iverilog
+# Makefile for compiling, simulating and synthesizing Verilog files
 
-# Waveform viewer
-GTKWAVE = gtkwave
+# Testbench source files
+TESTBENCH_PERIPHERAL = peripheral/peripheral.v
+TESTBENCH_CONTROLLER = controller/controller.v
+TESTBENCH_MDIO = MDIO_tb.v
 
-# Verilog sources
-SOURCES = controller/controller.v peripheral/peripheral.v MDIO_tb.v
+# Comandos de simulación
+SIMULATOR = iverilog
+SIMULATOR_FLAGS = -o
+SIMULATOR_EXECUTABLE = sim
 
-# Object files
-OBJECTS = $(SOURCES:.v=.vvp)
+# Comandos para ver la salida de simulación
+WAVEFORM_VIEWER = gtkwave
 
-# Default target
-all: $(OBJECTS)
+# Objetivo por defecto
+all: peripheral controller mdio
 
-# Compilation rules
-%.vvp: %.v
-   $(IVERILOG) -o $@ $<
+# Compilar archivos Verilog
+peripheral:
+	$(SIMULATOR) $(SIMULATOR_FLAGS) $(SIMULATOR_EXECUTABLE) $(TESTBENCH_PERIPHERAL)
+	.peripheral/$(SIMULATOR_EXECUTABLE)
+	$(WAVEFORM_VIEWER) $(SIMULATOR_EXECUTABLE).vcd
 
-# Run testbenches
-run_controller_tb: controller/controller.vvp
-   vvp controller/controller.vvp
-   $(GTKWAVE) controller/controller.vcd &
+controller:
+	$(SIMULATOR) $(SIMULATOR_FLAGS) $(SIMULATOR_EXECUTABLE) $(TESTBENCH_CONTROLLER)
+	.controller/$(SIMULATOR_EXECUTABLE)
+	$(WAVEFORM_VIEWER) $(SIMULATOR_EXECUTABLE).vcd
 
-run_peripheral_tb: peripheral/peripheral.vvp
-   vvp peripheral/peripheral.vvp
-   $(GTKWAVE) peripheral/peripheral.vcd &
+mdio:
+	$(SIMULATOR) $(SIMULATOR_FLAGS) $(SIMULATOR_EXECUTABLE) $(TESTBENCH_MDIO)
+	./$(SIMULATOR_EXECUTABLE)
+	$(WAVEFORM_VIEWER) $(SIMULATOR_EXECUTABLE).vcd
 
-run_mdio_tb: MDIO_tb.vvp
-   vvp MDIO_tb.vvp
-   $(GTKWAVE) MDIO_tb.vcd &
-
-# Clean up
+# Limpiar archivos generados
 clean:
-   rm -f $(OBJECTS) *.vcd
-
-# Dependencies
-MDIO_tb.vvp: controller/controller.v peripheral/peripheral.v
-controller/controller.vvp: controller/controller.v
-peripheral/peripheral.vvp: peripheral/peripheral.v
+	rm -f $(SIMULATOR_EXECUTABLE) $(SIMULATOR_EXECUTABLE).vcd _.vvp_ .vcd _.log

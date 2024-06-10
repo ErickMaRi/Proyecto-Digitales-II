@@ -16,7 +16,7 @@ peripheral_instance peripheral_inst (
 
 // Inicialización de señales
 initial begin
-    $dumpfile("peripheral/peripheral.vcd");
+    $dumpfile("peripheral/sim.vcd");
     $dumpvars(0, peripheral_tb);
 
     clk = 0;
