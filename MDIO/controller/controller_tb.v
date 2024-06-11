@@ -32,13 +32,6 @@ module controller_tb;
     initial begin
         $dumpfile("sim.vcd");
         $dumpvars(0, controller_tb);
-        clk = 0;
-        reset = 1;
-        mdio_out = 0;
-        mdio_oe = 0;
-        rd_data = 0;
-        #10 reset = 0;
-        #10 reset = 1;
     end
 
     // Generación de reloj
@@ -55,12 +48,17 @@ module controller_tb;
 
     // Pruebas según el protocolo MDIO cláusula 22 (IEEE 802.3)
     initial begin
+        clk = 0;
+        reset = 1;
+        mdio_out = 0;
+        mdio_oe = 0;
+        rd_data = 0;
         // Prueba 1: Inicialización y reset
         print_signals;
 
         // Esperar un tiempo para permitir que el controlador se reinicie
-        #100;
-
+        #50;
+        #10 reset = 0;
         // Prueba 2: Transacción de Escritura válida
         mdio_oe = 1;
         mdio_out = 1; // Código de operación = 01 (Escritura)
