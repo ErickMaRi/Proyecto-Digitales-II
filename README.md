@@ -2,7 +2,7 @@
 
 ## Descripción del Proyecto 📝
 
-Este proyecto consiste en el diseño de un receptor de transacciones MDIO (Interfaz de Gestión de Dispositivos Independientes) según las especificaciones de la cláusula 22 del estándar IEEE 802.3. El receptor es responsable de recibir y procesar transacciones MDIO, las cuales son transacciones seriales de 32 bits utilizadas para la gestión y configuración de dispositivos en redes Ethernet.
+Este proyecto consiste en el diseño y la implementación de un receptor de transacciones MDIO (Management Data Input/Output) conforme a las especificaciones de la cláusula 22 del estándar IEEE 802.3. Este receptor es esencial para recibir y procesar transacciones MDIO, que son transacciones seriales de 32 bits usadas en la configuración y gestión de dispositivos en redes Ethernet.
 
 ## Estructura del Proyecto 🗂️
 
@@ -26,22 +26,22 @@ El proyecto se organiza de la siguiente manera:
 ### Controlador y Periférico MDIO ⚙️
 
 #### Protocolo MDIO 🔄
-- Formato de transacción serial de 32 bits
+- Formato de transacción serial de 32 bits.
 - Estructura:
 
-| Bit(s) | Campo             | Descripción                                                                  |
-|--------|-------------------|------------------------------------------------------------------------------|
-| 31-30  | ST (Start)        | Código de inicio de trama (01 para Clause 22)                                 |
-| 29-28  | Código de operación | 10: Lectura, 01: Escritura                                                    |
-| 27-23  | PHY Address       | Dirección del dispositivo PHY                                                 |
-| 22-18  | Reg Address       | Dirección del registro a leer o escribir en el dispositivo PHY                |
-| 17-16  | TA (Turnaround)   | Tiempo de espera para cambiar la propiedad del bus                            |
+| Bit(s) | Campo             | Descripción                                                                 |
+|--------|-------------------|-----------------------------------------------------------------------------|
+| 31-30  | ST (Start)        | Código de inicio de trama (01 para Clause 22)                               |
+| 29-28  | Código de operación | 10: Lectura, 01: Escritura                                                  |
+| 27-23  | PHY Address       | Dirección del dispositivo PHY                                               |
+| 22-18  | Reg Address       | Dirección del registro a leer o escribir en el dispositivo PHY              |
+| 17-16  | TA (Turnaround)   | Tiempo de espera para cambiar la propiedad del bus                          |
 | 15-0   | Data              | Datos a escribir (en transacciones de escritura) o datos leídos (en transacciones de lectura) |
 
-- Utiliza señales MDC (Reloj) y MDIO (Datos)
-- Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC
-- En Escritura, se envían los 32 bits de la trama al dispositivo PHY
-- En Lectura, se envían los primeros 16 bits, y el PHY responde con los 16 bits restantes (datos leídos)
+- Utiliza señales MDC (Reloj) y MDIO (Datos).
+- Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC.
+- En Escritura, se envían los 32 bits de la trama al dispositivo PHY.
+- En Lectura, se envían los primeros 16 bits, y el PHY responde con los 16 bits restantes (datos leídos).
 
 ### Controlador 🎛️
 - Recibe:
@@ -61,62 +61,18 @@ El proyecto se organiza de la siguiente manera:
 - Recibe:
   1. `ADDR[4:0]`: Dirección del registro a leer/escribir.
   2. `WR_DATA[15:0]`: Datos a escribir.
-  3. `RD_DATA[15:0]`: Salida de datos leídos.
+  3. `RD_DATA[15:0]`: Salida de datos le
+
+ídos.
   4. `WR_STB`: Indica operación de escritura cuando WR_STB=1.
-- Implementa memoria interna (por ejemplo, arreglo) para almacenar registros
+- Implementa memoria interna (por ejemplo, arreglo) para almacenar registros.
 - Para Escritura:
-  1. Recibe dirección de registro (ADDR) y datos (WR_DATA)
-  2. En WR_STB=1, escribe WR_DATA en la posición de memoria indicada por ADDR
+  1. Recibe dirección de registro (ADDR) y datos (WR_DATA).
+  2. En WR_STB=1, escribe WR_DATA en la posición de memoria indicada por ADDR.
 - Para Lectura:
-  1. Recibe dirección de registro (ADDR)
-  2. Lee datos de la posición de memoria indicada por ADDR
-  3. Coloca los datos leídos en RD_DATA
-
-### Banco de Pruebas del Controlador 🧪
-- Genera señales de entrada: MDC, RESET, MDIO_OUT, MDIO_OE
-- Verifica señales de salida: MDIO_DONE, MDIO_IN, ADDR, WR_DATA, RD_DATA, WR_STB
-- Pruebas:
-  1. Inicialización y reset
-  2. Transacciones de Escritura válidas e inválidas:
-    * Diferentes combinaciones de dirección de registro y datos
-    * Verificación de MDIO_DONE, WR_STB, WR_DATA, ADDR
-  3. Transacciones de Lectura válidas e inválidas:
-    * Diferentes combinaciones de dirección de registro
-    * Verificación de MDIO_DONE, MDIO_IN, RD_DATA, ADDR
-  4. Cobertura de código: ejercitar todas las líneas y condiciones
-
-### Banco de Pruebas del Periférico 🧫
-- Genera señales de entrada: ADDR, WR_DATA, WR_STB
-- Verifica señales de salida: RD_DATA
-- Pruebas:
-  1. Inicialización y reset
-  2. Operaciones de Escritura válidas e inválidas:
-    * Diferentes combinaciones de dirección de registro y datos
-    * Verificación de datos escritos en memoria
-  3. Operaciones de Lectura válidas e inválidas:
-    * Diferentes combinaciones de dirección de registro
-    * Verificación de datos leídos de memoria
-  4. Cobertura de código: ejercitar todas las líneas y condiciones
-
-### Banco de Pruebas de MDIO 🔬
-- Instancia del Controlador y Periférico
-- Genera señales de entrada del Controlador: MDC, RESET, MDIO_OUT, MDIO_OE
-- Verifica señales de salida del Controlador y Periférico
-- Pruebas:
-  1. Inicialización y reset de Controlador y Periférico
-  2. Transacciones MDIO completas de Escritura y Lectura válidas e inválidas:
-    * Diferentes combinaciones de dirección de PHY, dirección de registro y datos
-    * Verificación de decodificación y procesamiento de tramas
-    * Verificación de datos escritos y leídos en Periférico
-    * Verificación de señales de control y datos (MDIO_DONE, WR_STB, MDIO_IN, WR_DATA, RD_DATA)
-  3. Cobertura de código para Controlador y Periférico
-  4. Interoperabilidad entre Controlador y Periférico
-  5. Pruebas de estrés y rendimiento:
-    * Gran cantidad de transacciones MDIO consecutivas
-    * Verificación de manejo correcto del sistema
-  6. Escenarios de error y condiciones de borde:
-    * Tramas MDIO incorrectas
-    * Interrupciones durante transacciones
+  1. Recibe dirección de registro (ADDR).
+  2. Lee datos de la posición de memoria indicada por ADDR.
+  3. Coloca los datos leídos en RD_DATA.
 
 ### Uso del Makefile para Probar los Módulos y el Protocolo MDIO 🛠️
 
