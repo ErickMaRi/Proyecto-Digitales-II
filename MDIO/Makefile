@@ -1,37 +1,41 @@
-# Makefile for compiling, simulating and synthesizing Verilog files
-
 # Testbench source files
-TESTBENCH_PERIPHERAL = peripheral/peripheral.v
-TESTBENCH_CONTROLLER = controller/controller.v
+TESTBENCH_PERIPHERAL = peripheral/peripheral_tb.v
+TESTBENCH_CONTROLLER = controller/controller_tb.v
 TESTBENCH_MDIO = MDIO_tb.v
 
-# Comandos de simulación
+# Simulator
 SIMULATOR = iverilog
 SIMULATOR_FLAGS = -o
-SIMULATOR_EXECUTABLE = sim
 
-# Comandos para ver la salida de simulación
+# Waveform viewer
 WAVEFORM_VIEWER = gtkwave
 
-# Objetivo por defecto
+# Default target
 all: peripheral controller mdio
 
-# Compilar archivos Verilog
-peripheral:
-	$(SIMULATOR) $(SIMULATOR_FLAGS) $(SIMULATOR_EXECUTABLE) $(TESTBENCH_PERIPHERAL)
-	.peripheral/$(SIMULATOR_EXECUTABLE)
-	$(WAVEFORM_VIEWER) $(SIMULATOR_EXECUTABLE).vcd
+# Compile Verilog files
+peripheral: sim_peripheral
+	./sim_peripheral
+	$(WAVEFORM_VIEWER) sim.vcd
 
-controller:
-	$(SIMULATOR) $(SIMULATOR_FLAGS) $(SIMULATOR_EXECUTABLE) $(TESTBENCH_CONTROLLER)
-	.controller/$(SIMULATOR_EXECUTABLE)
-	$(WAVEFORM_VIEWER) $(SIMULATOR_EXECUTABLE).vcd
+controller: sim_controller
+	./sim_controller
+	$(WAVEFORM_VIEWER) sim.vcd
 
-mdio:
-	$(SIMULATOR) $(SIMULATOR_FLAGS) $(SIMULATOR_EXECUTABLE) $(TESTBENCH_MDIO)
-	./$(SIMULATOR_EXECUTABLE)
-	$(WAVEFORM_VIEWER) $(SIMULATOR_EXECUTABLE).vcd
+mdio: sim_mdio
+	./sim
+	$(WAVEFORM_VIEWER) sim.vcd
 
-# Limpiar archivos generados
+# Simulation executables
+sim_peripheral: $(TESTBENCH_PERIPHERAL) peripheral/peripheral.v
+	$(SIMULATOR) $(SIMULATOR_FLAGS) sim_peripheral $(TESTBENCH_PERIPHERAL)
+
+sim_controller: $(TESTBENCH_CONTROLLER) controller/controller.v
+	$(SIMULATOR) $(SIMULATOR_FLAGS) sim_controller $(TESTBENCH_CONTROLLER)
+
+sim_mdio: $(TESTBENCH_MDIO) peripheral/peripheral.v controller/controller.v
+	$(SIMULATOR) $(SIMULATOR_FLAGS) sim_mdio $(TESTBENCH_MDIO)
+
+# Clean up generated files
 clean:
-	rm -f $(SIMULATOR_EXECUTABLE) $(SIMULATOR_EXECUTABLE).vcd _.vvp_ .vcd _.log
+	rm -f sim *.vcd
