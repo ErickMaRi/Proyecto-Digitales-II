@@ -1,4 +1,4 @@
-### Receptor de Transacciones MDIO 📡💾
+### Receptor de Transacciones MDIO 📡🔄💾
 
 ## Descripción del Proyecto 📝
 
