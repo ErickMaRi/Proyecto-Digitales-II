@@ -1,10 +1,10 @@
-### Receptor de Transacciones MDIO
+### Receptor de Transacciones MDIO 📡💾
 
-## Descripción del proyecto
+## Descripción del Proyecto 📝
 
 Este proyecto consiste en el diseño de un receptor de transacciones MDIO (Interfaz de Gestión de Dispositivos Independientes) según las especificaciones de la cláusula 22 del estándar IEEE 802.3. El receptor es responsable de recibir y procesar transacciones MDIO, las cuales son transacciones seriales de 32 bits utilizadas para la gestión y configuración de dispositivos en redes Ethernet.
 
-## Estructura del proyecto
+## Estructura del Proyecto 🗂️
 
 El proyecto se organiza de la siguiente manera:
 
@@ -23,9 +23,9 @@ El proyecto se organiza de la siguiente manera:
 └── README.md
 ```
 
-### Controlador y Periférico MDIO
+### Controlador y Periférico MDIO ⚙️
 
-#### Protocolo MDIO
+#### Protocolo MDIO 🔄
 - Formato de transacción serial de 32 bits
 - Estructura:
 
@@ -43,7 +43,7 @@ El proyecto se organiza de la siguiente manera:
 - En Escritura, se envían los 32 bits de la trama al dispositivo PHY
 - En Lectura, se envían los primeros 16 bits, y el PHY responde con los 16 bits restantes (datos leídos)
 
-### Controlador
+### Controlador 🎛️
 - Recibe:
   1. `MDC`: Reloj para el MDIO. Flanco activo en flanco creciente.
   2. `RESET`: Reinicio del controlador. Si RESET=1, funciona normalmente. Si RESET=0, vuelve a estado inicial y todas las salidas a 0.
@@ -57,7 +57,7 @@ El proyecto se organiza de la siguiente manera:
   5. `RD_DATA[15:0]`: Valor leído desde la memoria, a más tardar 2 ciclos de MDC después de MDIO_DONE=1 y WR_STB=0.
   6. `WR_STB`: Indica que WR_DATA y WR_ADDR son válidos y deben escribirse a la memoria.
 
-### Periférico
+### Periférico 🖧
 - Recibe:
   1. `ADDR[4:0]`: Dirección del registro a leer/escribir.
   2. `WR_DATA[15:0]`: Datos a escribir.
@@ -72,7 +72,7 @@ El proyecto se organiza de la siguiente manera:
   2. Lee datos de la posición de memoria indicada por ADDR
   3. Coloca los datos leídos en RD_DATA
 
-### Banco de Pruebas del Controlador
+### Banco de Pruebas del Controlador 🧪
 - Genera señales de entrada: MDC, RESET, MDIO_OUT, MDIO_OE
 - Verifica señales de salida: MDIO_DONE, MDIO_IN, ADDR, WR_DATA, RD_DATA, WR_STB
 - Pruebas:
@@ -85,7 +85,7 @@ El proyecto se organiza de la siguiente manera:
     * Verificación de MDIO_DONE, MDIO_IN, RD_DATA, ADDR
   4. Cobertura de código: ejercitar todas las líneas y condiciones
 
-### Banco de Pruebas del Periférico
+### Banco de Pruebas del Periférico 🧫
 - Genera señales de entrada: ADDR, WR_DATA, WR_STB
 - Verifica señales de salida: RD_DATA
 - Pruebas:
@@ -98,7 +98,7 @@ El proyecto se organiza de la siguiente manera:
     * Verificación de datos leídos de memoria
   4. Cobertura de código: ejercitar todas las líneas y condiciones
 
-### Banco de Pruebas de MDIO
+### Banco de Pruebas de MDIO 🔬
 - Instancia del Controlador y Periférico
 - Genera señales de entrada del Controlador: MDC, RESET, MDIO_OUT, MDIO_OE
 - Verifica señales de salida del Controlador y Periférico
@@ -118,7 +118,7 @@ El proyecto se organiza de la siguiente manera:
     * Tramas MDIO incorrectas
     * Interrupciones durante transacciones
 
-### Uso del makefile para probar los módulos y el protocolo MDIO
+### Uso del Makefile para Probar los Módulos y el Protocolo MDIO 🛠️
 
 El proyecto incluye un archivo `Makefile` que facilita la compilación y ejecución de los bancos de pruebas. Para ejecutar los bancos de pruebas, sigue estos pasos:
 
@@ -130,7 +130,7 @@ El proyecto incluye un archivo `Makefile` que facilita la compilación y ejecuci
 
 Después de ejecutar cada banco de pruebas, se generará un archivo `*.vcd` que contiene la traza de la simulación. Puedes abrir este archivo en un visor de formas de onda, como GTKWave, para visualizar los resultados.
 
-### Fuentes y software usado
+### Fuentes y Software Usado 💻
 
 - Estándar IEEE 802.3 (cláusula 22)
 - Icarus Verilog (compilador de Verilog)
