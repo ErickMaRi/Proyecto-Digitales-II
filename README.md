@@ -143,15 +143,14 @@ Para compilar y ejecutar los bancos de pruebas:
 
 ### Semana 2: 15 de junio - 21 de junio
 - **Sábado 15 de junio:** Inicio de la programación de los módulos (controlador y periférico) en Verilog.
-- **Lunes 17 de junio a Viernes 21 de junio:** Desarrollo continuo del controlador y periférico, asegurando el cumplimiento con el protocolo MDIO y la implementación correcta de la máquina de estados.
+- **Lunes 17 de junio a Viernes 21 de junio:** Desarrollo continuo del controlador y periférico, asegurando el cumplimiento con el protocolo MDIO y la implementación correcta de la máquina de estados, comienza también el desarrollo de los bancos de prueba.
 
 ### Semana 3: 22 de junio - 24 de junio
-- **Sábado 22 de junio:** Finalización de la programación de los módulos.
-- **Lunes 24 de junio a Viernes 28 de junio:** Desarrollo de los bancos de pruebas `controller_tb.v` y `peripheral_tb.v`, incluyendo la simulación y verificación de las señales.
+- **Sábado 22 de junio a Lunes 24 de junio:** Desarrollo de los bancos de pruebas `controller_tb.v` y `peripheral_tb.v`, incluyendo la simulación y verificación de las señales.
 
 ### Semana 4: 24 de junio - 1 de julio
 - **Sábado 29 de junio:** Integración del sistema completo y desarrollo del banco de pruebas `MDIO_tb.v`.
-- **Domingo 30 de junio:** Verificación y simulación de las transacciones MDIO completas.
+- **Domingo 30 de junio:** Verificación y simulación de las transacciones MDIO completas. Redacción de la presentación power point.
 - **Lunes 1 de julio:** Finalización de la documentación en LaTeX, revisando y asegurando la coherencia y completitud de la descripción del proyecto y los resultados de las pruebas.
 
 ### Tabla Resumen 📋
