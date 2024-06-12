@@ -1,4 +1,4 @@
-`include "peripheral.v"
+`include "peripheral/peripheral.v"
 `timescale 1ns / 1ps
 
 module peripheral_tb;
@@ -8,9 +8,9 @@ reg clk, reset;
 // Otras señales del periférico...
 
 // Instancia del módulo periférico
-peripheral_instance peripheral_inst (
+peripheral peripheral_inst (
     .clk(clk),
-    .reset(reset),
+    .reset(reset)
     // Otras señales del periférico...
 );
 
@@ -24,9 +24,13 @@ initial begin
     // Inicialización de otras señales...
 
     // Generación de estímulos para el periférico...
+    #40;
+    $finish;
 end
 
 // Generación de reloj
 always #5 clk = ~clk;
+
+
 
 endmodule

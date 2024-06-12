@@ -9,15 +9,15 @@ reg clk, reset;
 // Otras señales del MDIO...
 
 // Instancias de los módulos controlador y periférico
-controller_instance controller_inst (
+controller controller_inst (
     .clk(clk),
-    .reset(reset),
+    .reset(reset)
     // Otras señales del controlador...
 );
 
-peripheral_instance peripheral_inst (
+peripheral peripheral_inst (
     .clk(clk),
-    .reset(reset),
+    .reset(reset)
     // Otras señales del periférico...
 );
 
@@ -31,6 +31,8 @@ initial begin
     // Inicialización de otras señales...
 
     // Generación de estímulos para el MDIO...
+    #40;
+    $finish;
 end
 
 // Generación de reloj
