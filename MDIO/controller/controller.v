@@ -1,89 +1,95 @@
 `timescale 1ns / 1ps
 
-module controller(
+module mdio_controller(
     input wire clk,
     input wire reset,
+    input wire mdio_in,
     output reg mdio_out,
     output reg mdio_oe,
-    output reg mdio_done,
-    output reg [15:0] mdio_in,
-    output reg [4:0] addr,
-    output reg [15:0] wr_data,
-    input wire [15:0] rd_data,
-    output reg wr_stb
+    output reg mdc,
+    input wire [4:0] phy_addr,
+    input wire [4:0] reg_addr,
+    input wire [15:0] write_data,
+    output reg [15:0] read_data,
+    input wire start,
+    input wire operation, // 0 para escritura, 1 para lectura
+    output reg busy
 );
 
-// Declaración de parámetros y estados
-parameter IDLE = 3'b000, READ = 3'b001, WRITE = 3'b010, SEND_DATA = 3'b011, RECEIVE_DATA = 3'b100;
-reg [2:0] state, next_state;
-reg [4:0] bit_counter;
-reg [31:0] shift_reg;
+// Estados del controlador MDIO
+localparam IDLE = 0,
+           PREPARE = 1,
+           SEND = 2,
+           RECEIVE = 3,
+           FINISH = 4;
 
-// Lógica de estado siguiente
-always @(posedge clk or posedge reset) begin
+integer state = IDLE, next_state = IDLE;
+integer bit_count; // Contador de bits enviados/recibidos
+reg [31:0] shift_reg; // Registro de desplazamiento para la trama MDIO
+
+// Generación del reloj MDIO (MDC)
+always @(posedge clk) begin
+    if (reset) begin
+        mdc <= 0;
+    end else begin
+        mdc <= ~mdc; // Toggle MDC en cada ciclo de reloj
+    end
+end
+
+// Lógica de control de estado
+always @(posedge clk) begin
     if (reset) begin
         state <= IDLE;
-        mdio_done <= 0;
-        mdio_in <= 0;
-        addr <= 0;
-        wr_data <= 0;
-        wr_stb <= 0;
-        bit_counter <= 0;
+        busy <= 0;
+        mdio_oe <= 0;
+        mdio_out <= 0;
+        read_data <= 0;
         shift_reg <= 0;
     end else begin
         state <= next_state;
     end
 end
 
-// Lógica de salida y transiciones de estado
-always @(posedge clk) begin
+// Lógica de transición de estado
+always @(*) begin
+    next_state = state;
     case (state)
         IDLE: begin
-            mdio_done <= 0;
-            wr_stb <= 0;
-            bit_counter <= 0;
-            shift_reg <= 0;
-            if (mdio_oe) begin
-                next_state <= (mdio_out) ? WRITE : READ;
-            end else begin
-                next_state <= IDLE;
-            end
+            if (start) next_state = PREPARE;
         end
-        READ: begin
-            if (bit_counter < 15) begin
-                shift_reg <= {shift_reg[30:0], mdio_out};
-                bit_counter <= bit_counter + 1;
-            end else if (bit_counter == 15) begin
-                next_state <= RECEIVE_DATA;
-                mdio_in <= rd_data;
-                mdio_done <= 1;
-            end
+        PREPARE: begin
+            shift_reg = {2'b01, operation ? 2'b10 : 2'b01, phy_addr, reg_addr, 2'b10, write_data}; // Configuración dependiendo de la operación
+            bit_count = 31; // Preparar contador de bits
+            next_state = SEND;
         end
-        WRITE: begin
-            if (bit_counter < 31) begin
-                shift_reg <= {shift_reg[30:0], mdio_out};
-                bit_counter <= bit_counter + 1;
-            end else if (bit_counter == 31) begin
-                next_state <= SEND_DATA;
-                addr <= shift_reg[22:18];
-                wr_data <= shift_reg[15:0];
-                wr_stb <= 1;
-                mdio_done <= 1;
-            end
+        SEND: begin
+            if (bit_count == -1) next_state = operation ? RECEIVE : FINISH; // Pasar a recibir si es lectura
         end
-        SEND_DATA: begin
-            next_state <= IDLE;
+        RECEIVE: begin
+            if (bit_count == -1) next_state = FINISH;
         end
-        RECEIVE_DATA: begin
-            if (bit_counter < 31) begin
-                mdio_in <= {mdio_in[14:0], mdio_out};
-                bit_counter <= bit_counter + 1;
-            end else if (bit_counter == 31) begin
-                mdio_done <= 1;
-                next_state <= IDLE;
-            end
+        FINISH: begin
+            next_state = IDLE;
         end
     endcase
+end
+
+// Lógica de manejo de datos MDIO
+always @(posedge mdc) begin
+    if (state == SEND) begin
+        mdio_oe <= 1;
+        mdio_out <= shift_reg[31];
+        shift_reg <= shift_reg << 1;
+        bit_count <= bit_count - 1;
+    end else if (state == RECEIVE) begin
+        mdio_oe <= 0;
+        if (bit_count >= 0) begin
+            read_data[bit_count] <= mdio_in;
+        end
+        bit_count <= bit_count - 1;
+    end else begin
+        mdio_oe <= 0;
+    end
 end
 
 endmodule
