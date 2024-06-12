@@ -40,31 +40,65 @@ Este proyecto abarca el diseño e implementación de un receptor de transaccione
 - **Señales Usadas:** MDC (reloj) y MDIO (datos).
 - **Comportamiento:** Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC.
 
-### Controlador 🎛️
-- **Entradas:**
-  - **CLK:** Reloj principal.
-  - **RESET:** Señal de reinicio.
-  - **MDIO_IN:** Entrada de datos del PHY.
-- **Salidas:**
-  - **MDC:** Reloj de MDIO.
-  - **MDIO_OUT:** Salida de datos hacia el PHY.
-  - **MDIO_OE:** Control de salida de MDIO.
-- **Registros Internos:**
-  - **Address Register:** Almacena la dirección PHY y de registro durante la operación.
-  - **Data Register:** Almacena los datos a enviar o recibir.
-- **Descripción:**
-  - Controla el flujo de transacciones MDIO, genera el reloj MDC y maneja las señales de entrada/salida para comunicarse con dispositivos PHY.
+### Controlador MDIO 🎛️
 
-### Periférico 🖧
-- **Entradas:**
-  - **ADDR:** Dirección de la operación de memoria.
-  - **WR_DATA:** Datos para escribir en memoria.
-- **Salidas:**
-  - **RD_DATA:** Datos leídos de memoria.
-- **Registros Internos:**
-  - **Memory Array:** Array para almacenar los datos escritos.
-- **Descripción:**
-  - Implementa memoria para almacenar y recuperar registros según las transacciones MDIO.
+#### Descripción 📝
+El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las transacciones de lectura y escritura con los dispositivos PHY conectados. Implementa una máquina de estados finita (FSM) para controlar el flujo de la transacción y generar las señales de control adecuadas.
+
+#### Entradas ⚙️
+- **CLK:** Reloj del sistema.
+- **RESET:** Señal de reinicio del controlador.
+- **MDIO_IN:** Entrada de datos seriales del bus MDIO (desde el dispositivo PHY).
+
+#### Salidas 📤
+- **MDC:** Reloj del bus MDIO.
+- **MDIO_OUT:** Salida de datos seriales hacia el bus MDIO (al dispositivo PHY).
+- **MDIO_OE:** Habilitación de la salida MDIO_OUT.
+
+#### Registros Internos 💾
+- **address_reg:** Registro que almacena la dirección del dispositivo PHY y el registro a leer/escribir.
+- **data_reg:** Registro que almacena los datos a enviar o recibir.
+
+#### Máquina de Estados 🏭
+1. **IDLE:** Estado inicial. Espera una transacción MDIO.
+2. **START:** Detecta el código de inicio de la trama (01).
+3. **OP_CODE:** Determina si la operación es lectura (10) o escritura (01).
+4. **PHY_ADDR:** Carga la dirección del dispositivo PHY en address_reg.
+5. **REG_ADDR:** Carga la dirección del registro en address_reg.
+6. **TURNAROUND:** Ciclo de espera para cambio de control del bus.
+7. **WRITE_DATA:** Envía los datos seriales a través de MDIO_OUT (en escritura).
+8. **READ_DATA:** Recibe los datos seriales desde MDIO_IN (en lectura).
+
+#### Funcionamiento 🚀
+1. En el estado **IDLE**, el controlador espera una transacción MDIO válida.
+2. Si se detecta el código de inicio (01), se pasa al estado **START**.
+3. En **OP_CODE**, se determina si la operación es lectura o escritura.
+4. En **PHY_ADDR** y **REG_ADDR**, se carga la dirección completa en address_reg.
+5. En **TURNAROUND**, se espera un ciclo para el cambio de control del bus.
+6. En **WRITE_DATA**, se envían serialmente los datos desde data_reg a través de MDIO_OUT.
+7. En **READ_DATA**, se reciben serialmente los datos desde MDIO_IN y se almacenan en data_reg.
+8. Al finalizar la transacción, se vuelve al estado **IDLE**.
+
+### Periférico MDIO 🖧
+
+#### Descripción 📝
+El periférico MDIO actúa como una memoria que almacena y recupera registros según las transacciones MDIO recibidas. Implementa un arreglo de memoria y lógica para manejar las operaciones de lectura y escritura.
+
+#### Entradas ⚙️
+- **ADDR:** Dirección de memoria para la operación actual.
+- **WR_DATA:** Datos a escribir en la dirección especificada.
+
+#### Salidas 📤
+- **RD_DATA:** Datos leídos desde la dirección especificada.
+
+#### Registros Internos 💾
+- **mem:** Arreglo de memoria para almacenar los registros.
+
+#### Funcionamiento 🚀
+1. Cuando se recibe una transacción de escritura (determinada por las señales de control del controlador MDIO), los datos en WR_DATA se escriben en la dirección de memoria especificada por ADDR.
+2. Cuando se recibe una transacción de lectura, los datos almacenados en la dirección de memoria especificada por ADDR se cargan en RD_DATA y se envían al controlador MDIO.
+3. Las operaciones de lectura y escritura se sincronizan con las señales de control del controlador MDIO.
+4. El periférico no realiza ninguna operación adicional además de almacenar y recuperar los registros según las transacciones MDIO.
 
 ### Bancos de Pruebas 🛠️
 
