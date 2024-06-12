@@ -4,10 +4,10 @@
 module controller_tb;
     // Entradas del controlador
     reg clk, reset;
-    reg mdio_out, mdio_oe;
     reg [15:0] rd_data;
 
     // Salidas del controlador
+    wire mdio_out, mdio_oe;
     wire mdio_done;
     wire [15:0] mdio_in;
     wire [4:0] addr;
@@ -28,12 +28,6 @@ module controller_tb;
         .wr_stb(wr_stb)
     );
 
-    // Inicialización de señales
-    initial begin
-        $dumpfile("sim.vcd");
-        $dumpvars(0, controller_tb);
-    end
-
     // Generación de reloj
     always #5 clk = ~clk;
 
@@ -48,75 +42,38 @@ module controller_tb;
 
     // Pruebas según el protocolo MDIO cláusula 22 (IEEE 802.3)
     initial begin
+        $dumpfile("sim.vcd");
+        $dumpvars(0, controller_tb);
         clk = 0;
         reset = 1;
-        mdio_out = 0;
-        mdio_oe = 0;
-        rd_data = 0;
-        // Prueba 1: Inicialización y reset
-        print_signals;
+        rd_data = 16'h0000;
+
+        // Inicialización y reset
+        #10 reset = 0;
+        #10 reset = 1;
 
         // Esperar un tiempo para permitir que el controlador se reinicie
         #50;
         #10 reset = 0;
+        // Prueba 1: Inicialización y reset
+        print_signals;
+
         // Prueba 2: Transacción de Escritura válida
-        mdio_oe = 1;
-        mdio_out = 1; // Código de operación = 01 (Escritura)
-        #10;
-        mdio_out = 0; // Reservado
-        repeat (5) #10 mdio_out = 0; // Reservado
-        mdio_out = 4'b0001; // Dirección del PHY = 1
-        #10;
-        mdio_out = 5'b00101; // Dirección del Registro = 5
-        #10;
-        mdio_out = 16'habcd; // Datos de Escritura
-        repeat (16) #10 mdio_out = ~mdio_out;
+        rd_data = 16'habcd; // Datos de Escritura
         #100; // Esperar un tiempo para que la transacción se complete
         print_signals;
 
         // Prueba 3: Transacción de Lectura válida
-        mdio_oe = 1;
-        mdio_out = 0; // Código de operación = 00 (Lectura)
-        #10;
-        mdio_out = 0; // Reservado
-        repeat (5) #10 mdio_out = 0; // Reservado
-        mdio_out = 4'b0010; // Dirección del PHY = 2
-        #10;
-        mdio_out = 5'b01000; // Dirección del Registro = 8
-        #10;
-        mdio_out = 16'h0000; // Sin usar para Lectura
-        repeat (16) #10 mdio_out = ~mdio_out;
         rd_data = 16'hfeed; // Datos de Lectura
         #100; // Esperar un tiempo para que la transacción se complete
         print_signals;
 
         // Prueba 4: Transacción de Escritura inválida (dirección de registro fuera de rango)
-        mdio_oe = 1;
-        mdio_out = 1; // Código de operación = 01 (Escritura)
-        #10;
-        mdio_out = 0; // Reservado
-        repeat (5) #10 mdio_out = 0; // Reservado
-        mdio_out = 4'b0011; // Dirección del PHY = 3
-        #10;
-        mdio_out = 5'b11111; // Dirección del Registro = 31 (fuera de rango)
-        #10;
-        mdio_out = 16'hffff; // Datos de Escritura
-        repeat (16) #10 mdio_out = ~mdio_out;
+        rd_data = 16'hffff; // Datos de Escritura
         #100; // Esperar un tiempo para que la transacción se complete
         print_signals;
 
         // Prueba 5: Transacción de Lectura inválida (dirección de PHY fuera de rango)
-        mdio_oe = 1;
-        mdio_out = 0; // Código de operación = 00 (Lectura)
-        #10;
-        mdio_out = 0; // Reservado
-        repeat (5) #10 mdio_out = 0; // Reservado
-        mdio_out = 4'b1111; // Dirección del PHY = 15 (fuera de rango)
-        #10;
-        mdio_out = 5'b00111; // Dirección del Registro = 7
-        #10;
-        mdio_out = 16'h0000; // Sin usar para Lectura
-        repeat (16) #10 mdio_out = ~mdio_out;
         rd_data = 16'hcafe; // Datos de Lectura
         #100; // Esperar un tiempo para que la transacción se complete
         print_signals;

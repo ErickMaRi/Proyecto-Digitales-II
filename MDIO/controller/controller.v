@@ -1,9 +1,10 @@
 `timescale 1ns / 1ps
+
 module controller(
     input wire clk,
     input wire reset,
-    input wire mdio_out,
-    input wire mdio_oe,
+    output reg mdio_out,
+    output reg mdio_oe,
     output reg mdio_done,
     output reg [15:0] mdio_in,
     output reg [4:0] addr,
@@ -22,6 +23,13 @@ reg [31:0] shift_reg;
 always @(posedge clk or posedge reset) begin
     if (reset) begin
         state <= IDLE;
+        mdio_done <= 0;
+        mdio_in <= 0;
+        addr <= 0;
+        wr_data <= 0;
+        wr_stb <= 0;
+        bit_counter <= 0;
+        shift_reg <= 0;
     end else begin
         state <= next_state;
     end
@@ -31,10 +39,10 @@ end
 always @(posedge clk) begin
     case (state)
         IDLE: begin
-            mdio_done <= 1'b0;
-            wr_stb <= 1'b0;
-            bit_counter <= 5'd0;
-            shift_reg <= 32'd0;
+            mdio_done <= 0;
+            wr_stb <= 0;
+            bit_counter <= 0;
+            shift_reg <= 0;
             if (mdio_oe) begin
                 next_state <= (mdio_out) ? WRITE : READ;
             end else begin
@@ -42,34 +50,36 @@ always @(posedge clk) begin
             end
         end
         READ: begin
-            if (bit_counter == 5'd15) begin
-                next_state <= RECEIVE_DATA;
-                mdio_in <= 16'd0; // Inicializar mdio_in
-            end else begin
+            if (bit_counter < 15) begin
                 shift_reg <= {shift_reg[30:0], mdio_out};
-                bit_counter <= bit_counter + 1'b1;
+                bit_counter <= bit_counter + 1;
+            end else if (bit_counter == 15) begin
+                next_state <= RECEIVE_DATA;
+                mdio_in <= rd_data;
+                mdio_done <= 1;
             end
         end
         WRITE: begin
-            if (bit_counter == 5'd31) begin
-                next_state <= SEND_DATA;
-            end else begin
+            if (bit_counter < 31) begin
                 shift_reg <= {shift_reg[30:0], mdio_out};
-                bit_counter <= bit_counter + 1'b1;
+                bit_counter <= bit_counter + 1;
+            end else if (bit_counter == 31) begin
+                next_state <= SEND_DATA;
+                addr <= shift_reg[22:18];
+                wr_data <= shift_reg[15:0];
+                wr_stb <= 1;
+                mdio_done <= 1;
             end
         end
         SEND_DATA: begin
-            addr <= shift_reg[20:16];
-            wr_data <= shift_reg[15:0];
-            wr_stb <= 1'b1;
-            mdio_done <= 1'b1;
             next_state <= IDLE;
         end
         RECEIVE_DATA: begin
-            mdio_in <= {mdio_in[14:0], 1'b0}; // Desplazar mdio_in
-            bit_counter <= bit_counter + 1'b1;
-            if (bit_counter == 5'd31) begin
-                mdio_done <= 1'b1;
+            if (bit_counter < 31) begin
+                mdio_in <= {mdio_in[14:0], mdio_out};
+                bit_counter <= bit_counter + 1;
+            end else if (bit_counter == 31) begin
+                mdio_done <= 1;
                 next_state <= IDLE;
             end
         end
