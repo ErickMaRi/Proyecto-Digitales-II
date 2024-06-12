@@ -1,6 +1,27 @@
+
+ifeq ($(OS),Windows_NT)
+    # Configuraciones para Windows
+
+	TESTBENCH_PERIPHERAL = peripheral\peripheral_tb.v
+	TESTBENCH_CONTROLLER = controller\controller_tb.v
+	CONTROLLER = controller\controller.v
+	PERIPHERAL = peripheral\peripheral.v
+	OUT = .\sim
+	RM = del
+	WAVEFROM= .\sim.vcd
+	
+else
+    # Configuraciones para Linux
+	TESTBENCH_PERIPHERAL = peripheral/peripheral_tb.v
+	TESTBENCH_CONTROLLER = controller/controller_tb.v
+	TESTBENCH_PERIPHERAL = peripheral/peripheral_tb.v
+	TESTBENCH_CONTROLLER = controller/controller_tb.v
+	OUT = ./sim
+	RM = rm
+	WAVEFROM= ./sim.vcd
+
+endif
 # Testbench source files
-TESTBENCH_PERIPHERAL = peripheral/peripheral_tb.v
-TESTBENCH_CONTROLLER = controller/controller_tb.v
 TESTBENCH_MDIO = MDIO_tb.v
 
 # Simulator
@@ -11,31 +32,30 @@ SIMULATOR_FLAGS = -o
 WAVEFORM_VIEWER = gtkwave
 
 # Default target
-all: peripheral controller mdio
+all: peripheral controller mdio clean
 
 # Compile Verilog files
 peripheral: sim_peripheral
-	./sim
-	$(WAVEFORM_VIEWER) sim.vcd
+	$(WAVEFORM_VIEWER) $(WAVEFROM)
 
 controller: sim_controller
-	./sim
-	$(WAVEFORM_VIEWER) sim.vcd
+	$(WAVEFORM_VIEWER) $(WAVEFROM)
 
 mdio: sim_mdio
-	./sim
-	$(WAVEFORM_VIEWER) sim.vcd
+	$(WAVEFORM_VIEWER) $(WAVEFROM)
 
 # Simulation executables
-sim_peripheral: $(TESTBENCH_PERIPHERAL) peripheral/peripheral.v
+sim_peripheral: $(TESTBENCH_PERIPHERAL) $(PERIPHERAL)
 	$(SIMULATOR) $(SIMULATOR_FLAGS) sim $(TESTBENCH_PERIPHERAL)
-
-sim_controller: $(TESTBENCH_CONTROLLER) controller/controller.v
+	vvp sim
+sim_controller: $(TESTBENCH_CONTROLLER) $(CONTROLLER)
 	$(SIMULATOR) $(SIMULATOR_FLAGS) sim $(TESTBENCH_CONTROLLER)
+	vvp sim
 
-sim_mdio: $(TESTBENCH_MDIO) peripheral/peripheral.v controller/controller.v
+sim_mdio: $(TESTBENCH_MDIO) $(PERIPHERAL) $(CONTROLLER)
 	$(SIMULATOR) $(SIMULATOR_FLAGS) sim $(TESTBENCH_MDIO)
+	vvp sim
 
 # Clean up generated files
 clean:
-	rm -f sim *.vcd
+	$(RM) -f sim *.vcd
