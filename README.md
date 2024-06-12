@@ -2,11 +2,9 @@
 
 ## Descripción del Proyecto 📝
 
-Este proyecto consiste en el diseño y la implementación de un receptor de transacciones MDIO (Management Data Input/Output) conforme a las especificaciones de la cláusula 22 del estándar IEEE 802.3. Este receptor es esencial para recibir y procesar transacciones MDIO, que son transacciones seriales de 32 bits usadas en la configuración y gestión de dispositivos en redes Ethernet.
+Este proyecto abarca el diseño e implementación de un receptor de transacciones MDIO (Management Data Input/Output), conformándose a la cláusula 22 del estándar IEEE 802.3. El receptor es crucial para interpretar y procesar transacciones MDIO, esenciales en la gestión y configuración de dispositivos de red Ethernet.
 
 ## Estructura del Proyecto 🗂️
-
-El proyecto se organiza de la siguiente manera:
 
 ```
 .
@@ -19,75 +17,92 @@ El proyecto se organiza de la siguiente manera:
 │   └── peripheral
 │       ├── peripheral_tb.v
 │       └── peripheral.v
+├── Parte 1 Proyecto Final.pdf
 ├── Parte 2 Proyecto Final.pdf
 └── README.md
 ```
 
-### Controlador y Periférico MDIO ⚙️
+### Detalles del Controlador y Periférico MDIO ⚙️
 
 #### Protocolo MDIO 🔄
-- Formato de transacción serial de 32 bits.
-- Estructura:
+- **Formato de Transacción:** Serial de 32 bits.
+- **Estructura de Transacción:**
 
 | Bit(s) | Campo             | Descripción                                                                 |
 |--------|-------------------|-----------------------------------------------------------------------------|
 | 31-30  | ST (Start)        | Código de inicio de trama (01 para Clause 22)                               |
-| 29-28  | Código de operación | 10: Lectura, 01: Escritura                                                  |
+| 29-28  | Op Code           | 10: Lectura, 01: Escritura                                                  |
 | 27-23  | PHY Address       | Dirección del dispositivo PHY                                               |
 | 22-18  | Reg Address       | Dirección del registro a leer o escribir en el dispositivo PHY              |
-| 17-16  | TA (Turnaround)   | Tiempo de espera para cambiar la propiedad del bus                          |
-| 15-0   | Data              | Datos a escribir (en transacciones de escritura) o datos leídos (en transacciones de lectura) |
+| 17-16  | TA (Turnaround)   | Tiempo de espera para cambio de control del bus                             |
+| 15-0   | Data              | Datos a escribir o leídos                                                   |
 
-- Utiliza señales MDC (Reloj) y MDIO (Datos).
-- Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC.
-- En Escritura, se envían los 32 bits de la trama al dispositivo PHY.
-- En Lectura, se envían los primeros 16 bits, y el PHY responde con los 16 bits restantes (datos leídos).
+- **Señales Usadas:** MDC (reloj) y MDIO (datos).
+- **Comportamiento:** Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC.
 
 ### Controlador 🎛️
-- Recibe:
-  1. `MDC`: Reloj para el MDIO. Flanco activo en flanco creciente.
-  2. `RESET`: Reinicio del controlador. Si RESET=1, funciona normalmente. Si RESET=0, vuelve a estado inicial y todas las salidas a 0.
-  3. `MDIO_OUT`: Entrada serial. Debe provenir de un generador MDIO o modelar su comportamiento.
-  4. `MDIO_OE`: Habilitación de MDIO_OUT. Debe detectar si el valor de MDIO_OUT es válido y habilitado.
-- Genera:
-  1. `MDIO_DONE`: Strobe (pulso de 1 ciclo de reloj). Indica que se completó una transacción MDIO.
-  2. `MDIO_IN`: Salida serie. Durante operación de lectura, envía el dato almacenado en REGADDR durante los últimos 16 ciclos.
-  3. `ADDR[4:0]`: Dirección del registro a leer/escribir.
-  4. `WR_DATA[15:0]`: Datos a escribir en la posición de memoria indicada por ADDR cuando MDIO_DONE=1 y WR_STB=1.
-  5. `RD_DATA[15:0]`: Valor leído desde la memoria, a más tardar 2 ciclos de MDC después de MDIO_DONE=1 y WR_STB=0.
-  6. `WR_STB`: Indica que WR_DATA y WR_ADDR son válidos y deben escribirse a la memoria.
+- **Entradas:**
+  - **CLK:** Reloj principal.
+  - **RESET:** Señal de reinicio.
+  - **MDIO_IN:** Entrada de datos del PHY.
+- **Salidas:**
+  - **MDC:** Reloj de MDIO.
+  - **MDIO_OUT:** Salida de datos hacia el PHY.
+  - **MDIO_OE:** Control de salida de MDIO.
+- **Registros Internos:**
+  - **Address Register:** Almacena la dirección PHY y de registro durante la operación.
+  - **Data Register:** Almacena los datos a enviar o recibir.
+- **Descripción:**
+  - Controla el flujo de transacciones MDIO, genera el reloj MDC y maneja las señales de entrada/salida para comunicarse con dispositivos PHY.
 
 ### Periférico 🖧
-- Recibe:
-  1. `ADDR[4:0]`: Dirección del registro a leer/escribir.
-  2. `WR_DATA[15:0]`: Datos a escribir.
-  3. `RD_DATA[15:0]`: Salida de datos le
+- **Entradas:**
+  - **ADDR:** Dirección de la operación de memoria.
+  - **WR_DATA:** Datos para escribir en memoria.
+- **Salidas:**
+  - **RD_DATA:** Datos leídos de memoria.
+- **Registros Internos:**
+  - **Memory Array:** Array para almacenar los datos escritos.
+- **Descripción:**
+  - Implementa memoria para almacenar y recuperar registros según las transacciones MDIO.
 
-ídos.
-  4. `WR_STB`: Indica operación de escritura cuando WR_STB=1.
-- Implementa memoria interna (por ejemplo, arreglo) para almacenar registros.
-- Para Escritura:
-  1. Recibe dirección de registro (ADDR) y datos (WR_DATA).
-  2. En WR_STB=1, escribe WR_DATA en la posición de memoria indicada por ADDR.
-- Para Lectura:
-  1. Recibe dirección de registro (ADDR).
-  2. Lee datos de la posición de memoria indicada por ADDR.
-  3. Coloca los datos leídos en RD_DATA.
+### Bancos de Pruebas 🛠️
+
+#### `controller_tb.v`
+- **Objetivo:** Verificar el correcto manejo de las señales del controlador.
+- **Procedimientos:**
+  - Generación de señal de reloj y reset.
+  - Simulación de entradas MDIO_IN con variadas tramas de datos.
+  - Verificación de las salidas MDC, MDIO_OUT y MDIO_OE.
+- **Salidas Esperadas:** Archivos `.vcd` que muestran el correcto secuenciado y sincronización de las señales.
+
+#### `peripheral_tb.v`
+- **Objetivo:** Probar la capacidad del periférico para manejar escrituras y lecturas de memoria.
+- **Procedimientos:**
+  - Escritura en todas las direcciones de memoria.
+ 
+
+ - Lectura y verificación de los datos escritos.
+- **Salidas Esperadas:** Confirmación de la integridad de los datos en la memoria.
+
+#### `MDIO_tb.v`
+- **Objetivo:** Integrar y probar el sistema completo de transacciones MDIO.
+- **Procedimientos:**
+  - Simulación de una serie de transacciones MDIO completas.
+  - Verificación de la coordinación entre el controlador y el periférico.
+- **Salidas Esperadas:** Tramas detalladas en `.vcd` mostrando las transacciones completas y la correcta operación del sistema.
 
 ### Uso del Makefile para Probar los Módulos y el Protocolo MDIO 🛠️
 
-El proyecto incluye un archivo `Makefile` que facilita la compilación y ejecución de los bancos de pruebas. Para ejecutar los bancos de pruebas, sigue estos pasos:
+Para compilar y ejecutar los bancos de pruebas:
 
 1. Abre una terminal en el directorio raíz del proyecto.
-2. Ejecuta el comando `make` para compilar todos los módulos y bancos de pruebas.
-3. Para ejecutar el banco de pruebas del controlador, ejecuta el comando `make controller`.
-4. Para ejecutar el banco de pruebas del periférico, ejecuta el comando `make peripheral`.
-5. Para ejecutar el banco de pruebas de MDIO, ejecuta el comando `make mdio`.
-
-Después de ejecutar cada banco de pruebas, se generará un archivo `*.vcd` que contiene la traza de la simulación. Puedes abrir este archivo en un visor de formas de onda, como GTKWave, para visualizar los resultados.
+2. Ejecuta `make` para compilar todos los módulos y bancos de pruebas.
+3. Utiliza `make controller`, `make peripheral`, y `make mdio` para testear cada componente respectivamente.
+4. Los resultados se visualizan en GTKWave usando los archivos `*.vcd` generados.
 
 ### Fuentes y Software Usado 💻
 
-- Estándar IEEE 802.3 (cláusula 22)
-- Icarus Verilog (compilador de Verilog)
-- GTKWave (visor de formas de onda)
+- **Estándar IEEE 802.3 (cláusula 22)**
+- **Icarus Verilog:** Compilador de Verilog.
+- **GTKWave:** Visor de formas de onda.
