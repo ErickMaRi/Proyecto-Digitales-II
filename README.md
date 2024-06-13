@@ -43,17 +43,21 @@ Este proyecto abarca el diseño e implementación de un receptor de transaccione
 ### Controlador MDIO 🎛️
 
 #### Descripción 📝
-El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las transacciones de lectura y escritura con los dispositivos PHY conectados. Implementa una máquina de estados finita (FSM) para controlar el flujo de la transacción y generar las señales de control adecuadas.
+El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las transacciones de lectura y escritura con los dispositivos PHY (periféricos) conectados. Implementa una máquina de estados finita (FSM) para controlar el flujo de la transacción y generar las señales de control adecuadas.
 
 #### Entradas ⚙️
-- **CLK:** Reloj del sistema.
-- **RESET:** Señal de reinicio del controlador.
-- **MDIO_IN:** Entrada de datos seriales del bus MDIO (desde el dispositivo PHY).
+- **CLK:** Entrada que llega al controlador desde el CPU con una frecuencia determinada. (1 bit) (Señal hacia el CPU y SW)
+- **RESET:** Entrada de reinicio del generador. Si **RESET=1** el generador funciona normalmente, de lo contrario vuelve al estado inicial y *todas las salidas toman el valor de cero*. (1 bit)(Señal hacia el CPU y SW)
+- **MDIO_START:** Pulso de un ciclo de reloj. Indica al generador que se ha cargado un valor en la entrada **T_DATA** y que se debe iniciar la transmisión de los datos a través de la salida serial (**MDIO_OUT**). (1 bit) (Señal hacia el CPU y SW)
+- **T_DATA:** Entrada paralela. Cuando se habilita **MDIO_START** en el siguiente ciclo de reloj se transmite el bit **T_DATA** por la salida **MDIO_OUT** y durante los siguientes ciclos se transmite un bit por ciclo hasta completar el envío de la palabra completa. (32 bit) (Señal hacia el CPU y SW)
+- **MDIO_IN:** Entrada serial. Durante una operación de lectura, se debe leer el valor de esta entrada durante los últimos 16  ciclos de la transacción MDIO y escribirlos en la salida **RD_DATA**. (1 bit) (Señal hacia los periféricos)
 
 #### Salidas 📤
-- **MDC:** Reloj del bus MDIO.
-- **MDIO_OUT:** Salida de datos seriales hacia el bus MDIO (al dispositivo PHY).
-- **MDIO_OE:** Habilitación de la salida MDIO_OUT.
+- **RD_DATA:** Esta salida debe producir los 16 bits que se reciben desde el lado del periférico durante una transacción de lectura recibida en **MDIO_IN**. El valor de **RD_DATA** solo es válido cuando **DATA_RDY** es igual a 1. (16 bit) (Señal hacia el CPU y SW)
+- **DATA_RDY:** Salida que se pone en 1 cuando se ha completado la recepción de una palabra serial complerta durante una transacción de lectura. (1 bit) (Señal hacia el CPU y SW)
+- **MDC:** Salida de reloj para el MDIO, que deberá temer una frecuencia *de la mitad de la frecuencia de entrada* del **CLK**. Se debe generar MDC con la frecuencia correcta para cualquier valor de la frecuencia de entrada **CLK**. (1 bit) (Señal hacia los periféricos)
+- **MDIO_OE:** Habilitación de la salida **MDIO_OUT**. Debe detectar si la transacción es de lectura o escritura. Si la transacción es de *escritura*, debe permanecer en *alto durante 32 ciclos* de la transacción y ponerse en bajo cuando termine. En una transacción de *lectura*, debe permanecer en *alto durante primeros 16 ciclos* y luego *bajo durante los finales 16 ciclos*, mientras se recibe el dato en **MDIO_IN**, la señal debe ser cero. (1 bit) (Señal hacia los periféricos)
+- **MDIO_OUT:** *Salida serial*. Cuando se habilita **MDIO_START=1**, se envía a través de la salida **MDIO_OUT** los bits que se observan en la entrada T_DATA, empezando por el bit más significativo y hasta completar los 32 bits. (1 bit) (Señal hacia los periféricos)
 
 #### Registros Internos 💾
 - **address_reg:** Registro que almacena la dirección del dispositivo PHY y el registro a leer/escribir.
@@ -103,12 +107,14 @@ El periférico MDIO actúa como una memoria que almacena y recupera registros se
 ### Bancos de Pruebas 🛠️
 
 #### `controller_tb.v`
-- **Objetivo:** Verificar el correcto manejo de las señales del controlador.
+- **Objetivo:** Verificar el correcto funcionamiento del módulo controlador.
 - **Procedimientos:**
   - Generación de señal de reloj y reset.
-  - Simulación de entradas MDIO_IN con variadas tramas de datos.
-  - Verificación de las salidas MDC, MDIO_OUT y MDIO_OE.
-- **Salidas Esperadas:** Archivos `.vcd` que muestran el correcto secuenciado y sincronización de las señales.
+  - Simular las entradas y capturar las salidas para las pruebas de:
+    > Escritura
+    > Lectura
+    > Condición de **RESET**
+- **Salidas Esperadas:** Archivo `sim.vcd` que muestra los trazos del DUT, escritura en consola de algunos trazos relevantes en momentos sensibles.
 
 #### `peripheral_tb.v`
 - **Objetivo:** Probar la capacidad del periférico para manejar escrituras y lecturas de memoria.
