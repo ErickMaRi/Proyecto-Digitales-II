@@ -86,17 +86,21 @@ El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las
 ### Periférico MDIO 🖧
 
 #### Descripción 📝
-El periférico MDIO actúa como una memoria que almacena y recupera registros según las transacciones MDIO recibidas. Implementa un arreglo de memoria y lógica para manejar las operaciones de lectura y escritura.
+El periférico MDIO actúa como un receptor de transacciones MDIO de acuerdo con las especificaciones estipuladas en la cláusula 22 del estándar IEEE 802.3. Una memoria que almacena y recupera registros según las transacciones MDIO recibidas. Implementa un arreglo de memoria y lógica para manejar las operaciones de lectura y escritura. Funciona como una interfaz entre el PHY y el controlador.
 
 #### Entradas ⚙️
-- **ADDR:** Dirección de memoria para la operación actual.
-- **WR_DATA:** Datos a escribir en la dirección especificada.
+- **RESET:** Entrada de reinicio del generador. Si **RESET=1** el generador funciona normalmente. En caso contrario, el enerador vuelve a su estado inicial y todas las salidas toman el valor de cero. (1 bit) (Señal controlada por el testbench o sistema en el que se declara)
+- **RD_DATA:** Entrada de datos. Contiene el valor leído desde la memoria, a más tardar dos ciclos de MDC después de que se cumple que **MDIO_DONE=1** y **WR_STB=0**. (16 bit) (Señal hacia PHY)
+- **MDC:** Entrada de reloj para el MDIO. El flanco activo de la señal MDC es el flanco creciente. Esta entrada debe provenir de un generador de MDIO, o al menos modelar su comportamiento. (1 bit) (Señal hacia el controlador)
+- **MDIO_OE:** Habilitación de **MDIO_OUT**. Esta entrada debe detectar si el valor de **MDIO_OUT** que se está recibiendo es un valor válido habilitado. En una transacción de escritura, debe permanecer en alto durante los 32 ciclos de la transacción, pero ponerse en bajo al terminar la transacción. En una transacción de lectura, debe permanecer en alto durante los primeros 16 ciclos de la transacción, pero debe ponerse en cero durante los siguientes 16 ciclos, mientras el receptor envía el dato de **MDIO_IN**. Al final de la transacción de lectura, se espera que esta entrada debe permanecer en cero. (1 bit) (Señal hacia el controlador)
+- **MDIO_OUT:** Entrada serial. Esta entrada debe provenir de un generador de MDIO, o al menos modelar su comportamiento. (1 bit) (Señal hacia el controlador)
 
 #### Salidas 📤
-- **RD_DATA:** Datos leídos desde la dirección especificada.
-
-#### Registros Internos 💾
-- **mem:** Arreglo de memoria para almacenar los registros.
+- **ADDR:** Salida de dirección. Indica en qué posición de memoria se debe almacenar el dato que se recibe en **WR_DATA**, o desde cuál posición se debe leer **RD_DATA**. (5 bit) (Señal hacia PHY)
+- **WR_DATA:** Salida de datos. Los datos que se presentan en esta salida se escriben en la posición de memoria indicada por **ADDR** en el ciclo de reloj donde **MDIO_DONE=1** y **WR_STB=1**. (16 bit) (Señal hacia PHY)
+- **MDIO_DONE:** Strobe (pulso de un ciclo de reloj). Salida que indica que se ha completado una transacción de MDIO en el receptor. (1 bit) (Señal hacia PHY)
+- **WR_STB:** Esta salida se pone en 1 para indicar que los datos de **WR_DATA** y **WR_ADDR** son válidos y deben ser escritos a la memoria. (1 bit) (Señal hacia PHY)
+- **MDIO_IN:** Salida serie. Durante una operación de lectura (de acuerdo a la cláusula 22 del estándar), se debe enviar a través de esta salida, el dato almacenado en la posición **REGADDR**, durante los últimos 16 ciclos de la transacción de MDIO. (1 bit) (Señal hacia el controlador)
 
 #### Funcionamiento 🚀
 1. Cuando se recibe una transacción de escritura (determinada por las señales de control del controlador MDIO), los datos en WR_DATA se escriben en la dirección de memoria especificada por ADDR.
@@ -117,10 +121,14 @@ El periférico MDIO actúa como una memoria que almacena y recupera registros se
 - **Salidas Esperadas:** Archivo `sim.vcd` que muestra los trazos del DUT, escritura en consola de algunos trazos relevantes en momentos sensibles.
 
 #### `peripheral_tb.v`
-- **Objetivo:** Probar la capacidad del periférico para manejar escrituras y lecturas de memoria.
+- **Objetivo:** Probar el correcto funcionamiento del módulo periférico.
 - **Procedimientos:**
- - Escritura en todas las direcciones de memoria.
- - Lectura y verificación de los datos escritos.
+  - Generación de señal de reloj y reset.
+  - Simular las entradas y capturar las salidas para las pruebas de:
+    * Escritura, 
+    * Lectura,
+    * Carga de memoria
+    * Condición de **RESET**
 - **Salidas Esperadas:** Confirmación de la integridad de los datos en la memoria.
 
 #### `MDIO_tb.v`
@@ -164,7 +172,7 @@ Para compilar y ejecutar los bancos de pruebas:
 | **Semana 1**               | 8 de junio - 14 de junio | - Inicio de la redacción de la documentación <br> - Continuación de la documentación      |
 | **Semana 2**               | 15 de junio - 21 de junio | - Inicio de la programación de los módulos <br> - Desarrollo continuo del controlador y periférico |
 | **Semana 3**               | 22 de junio - 24 de junio | - Finalización de la programación de los módulos (24 de junio) <br> - Desarrollo de los bancos de pruebas `controller_tb.v` y `peripheral_tb.v` |
-| **Semana 4**               | 24 de junio - 1 de julio | - Integración del sistema completo <br> - Desarrollo del banco de pruebas `MDIO_tb.v` <br> - Verificación y simulación de las transacciones MDIO completas <br> - Finalización de la documentación en LaTeX |
+| **Semana 4**               | 24 de junio - 1 de julio | - Integración del sistema completo <br> - Desarrollo del banco de pruebas `MDIO_tb.v` <br> - Verificación y simulación de las transacciones MDIO completas <br> - Finalización de la documentación en LaTeX y el afiche |
 
 ### Fuentes y Software Usado 💻
 
