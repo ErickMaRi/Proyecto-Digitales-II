@@ -47,7 +47,7 @@ El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las
 
 #### Entradas ⚙️
 - **CLK:** Entrada que llega al controlador desde el CPU con una frecuencia determinada. (1 bit) (Señal hacia el CPU y SW)
-- **RESET:** Entrada de reinicio del generador. Si **RESET=1** el generador funciona normalmente, de lo contrario vuelve al estado inicial y *todas las salidas toman el valor de cero*. (1 bit)(Señal hacia el CPU y SW)
+- **RESET:** Entrada de reinicio del generador. Si **RESET=1** el generador funciona normalmente, de lo contrario vuelve al estado inicial y *todas las salidas toman el valor de cero*. (1 bit) (Señal hacia el CPU y SW)
 - **MDIO_START:** Pulso de un ciclo de reloj. Indica al generador que se ha cargado un valor en la entrada **T_DATA** y que se debe iniciar la transmisión de los datos a través de la salida serial (**MDIO_OUT**). (1 bit) (Señal hacia el CPU y SW)
 - **T_DATA:** Entrada paralela. Cuando se habilita **MDIO_START** en el siguiente ciclo de reloj se transmite el bit **T_DATA** por la salida **MDIO_OUT** y durante los siguientes ciclos se transmite un bit por ciclo hasta completar el envío de la palabra completa. (32 bit) (Señal hacia el CPU y SW)
 - **MDIO_IN:** Entrada serial. Durante una operación de lectura, se debe leer el valor de esta entrada durante los últimos 16  ciclos de la transacción MDIO y escribirlos en la salida **RD_DATA**. (1 bit) (Señal hacia los periféricos)
