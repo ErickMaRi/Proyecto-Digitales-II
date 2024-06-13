@@ -111,17 +111,15 @@ El periférico MDIO actúa como una memoria que almacena y recupera registros se
 - **Procedimientos:**
   - Generación de señal de reloj y reset.
   - Simular las entradas y capturar las salidas para las pruebas de:
-    > Escritura
-    > Lectura
-    > Condición de **RESET**
+    * Escritura, 
+    * Lectura, 
+    * Condición de **RESET**
 - **Salidas Esperadas:** Archivo `sim.vcd` que muestra los trazos del DUT, escritura en consola de algunos trazos relevantes en momentos sensibles.
 
 #### `peripheral_tb.v`
 - **Objetivo:** Probar la capacidad del periférico para manejar escrituras y lecturas de memoria.
 - **Procedimientos:**
-  - Escritura en todas las direcciones de memoria.
- 
-
+ - Escritura en todas las direcciones de memoria.
  - Lectura y verificación de los datos escritos.
 - **Salidas Esperadas:** Confirmación de la integridad de los datos en la memoria.
 
