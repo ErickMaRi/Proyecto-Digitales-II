@@ -1,8 +1,8 @@
 # Receptor de Transacciones MDIO 📡🔄💾
 
-## Descripción del Proyecto 📝
+## Resumen del Proyecto 📝
 
-Este proyecto abarca el diseño e implementación de un receptor de transacciones MDIO (Management Data Input/Output), conformándose a la cláusula 22 del estándar IEEE 802.3. El receptor es crucial para interpretar y procesar transacciones MDIO, esenciales en la gestión y configuración de dispositivos de red Ethernet.
+Abarca el diseño e implementación de un receptor de transacciones MDIO (Management Data Input/Output), conformándose a la cláusula 22 del estándar IEEE 802.3. El receptor es crucial para interpretar y procesar transacciones MDIO, utilizado en la gestión y configuración de dispositivos de red Ethernet.
 
 ## Estructura del Proyecto 🗂️
 
@@ -19,12 +19,10 @@ Este proyecto abarca el diseño e implementación de un receptor de transaccione
 │       └── peripheral.v
 ├── Parte 1 Proyecto Final.pdf
 ├── Parte 2 Proyecto Final.pdf
-├── package.json
 └── README.md
-
 ```
 
-## Detalles del Controlador y Periférico MDIO ⚙️
+## Descripción del Controlador y Periférico MDIO ⚙️
 
 ### Protocolo MDIO 🔄
 
@@ -158,6 +156,8 @@ El periférico MDIO actúa como un receptor de transacciones MDIO de acuerdo con
 3. Las operaciones de lectura y escritura se sincronizan con las señales de control del controlador MDIO.
 4. El periférico no realiza ninguna operación adicional además de almacenar y recuperar los registros según las transacciones MDIO.
 
+Aquí está la documentación del módulo PHY en el estilo del README:
+
 ### Physical Layer Device (PHY) 📶
 
 #### Descripción 📝
@@ -168,23 +168,23 @@ El Physical Layer Device (PHY) es un dispositivo que implementa la capa física 
 
 El PHY se comunica con el controlador MDIO a través de las siguientes señales:
 
-#### Entradas ⚙️
+##### Entradas ⚙️
 
 - **ADDR:** Dirección de memoria donde se deben almacenar o recuperar los datos. (5 bits)
-- **WR_DATA:** Datos que se escribirán en la memoria en la dirección especificada por `ADDR`. (16 bits)
-- **WR_STB:** Indica que los datos de `WR_DATA` y `ADDR` son válidos y deben escribirse en la memoria.
+- **WR_DATA:** Datos que se escribirán en la memoria en la dirección especificada por **ADDR**. (16 bits)
+- **WR_STB:** Indica que los datos de **WR_DATA** y **ADDR** son válidos y deben escribirse en la memoria.
 
-#### Salidas 📤
+##### Salidas 📤
 
-- **RD_DATA:** Datos leídos desde la memoria en la dirección especificada por `ADDR`. (16 bits)
+- **RD_DATA:** Datos leídos desde la memoria en la dirección especificada por **ADDR**. (16 bits)
 
 #### Funcionamiento 🚀
 
 1. **Escritura:**
-   - Cuando se recibe una transacción de escritura (`WR_STB = 1`), los datos presentes en `WR_DATA` se almacenan en la dirección de memoria indicada por `ADDR`.
+   - Cuando se recibe una transacción de escritura (**WR_STB=1**), los datos presentes en **WR_DATA** se almacenan en la dirección de memoria indicada por **ADDR**.
 
 2. **Lectura:**
-   - Cuando se recibe una transacción de lectura (`WR_STB = 0`), los datos almacenados en la dirección de memoria indicada por `ADDR` se cargan en `RD_DATA`.
+   - Cuando se recibe una transacción de lectura (**WR_STB = 0**), los datos almacenados en la dirección de memoria indicada por **ADDR** se cargan en **RD_DATA**.
 
 #### Memoria Interna 💾
 
@@ -199,6 +199,8 @@ Memoria PHY:
   ...        | ...
   0x1F       | Registro 31
 ```
+
+El módulo PHY no realiza ninguna operación adicional además de almacenar y recuperar los registros según las transacciones MDIO recibidas desde el controlador a través del periférico.
 
 ### Bancos de Pruebas 🛠️
 
@@ -230,43 +232,59 @@ Memoria PHY:
   - Verificación de la coordinación entre el controlador y el periférico.
 - **Salidas Esperadas:** Tramas detalladas en `.vcd` mostrando las transacciones completas y la correcta operación del sistema.
 
-En el archivo README.md no se encuentra documentación específica para un banco de pruebas del PHY (Physical Layer Device). Sin embargo, podemos deducir algunos aspectos basados en la información proporcionada sobre el PHY y los bancos de pruebas existentes.
+Aquí está la documentación del banco de pruebas (testbench) para el módulo PHY:
 
-Aquí está una posible documentación para un banco de pruebas del PHY:
+### Banco de Pruebas PHY 🧪
 
-### Banco de Pruebas PHY 📶
+#### `phy_tb.v`
 
-#### Descripción 📝
-El banco de pruebas PHY tiene como objetivo verificar el correcto funcionamiento del dispositivo PHY, simulando las transacciones MDIO de lectura y escritura, y validando que los datos se almacenen y se recuperen adecuadamente en la memoria interna del PHY.
+- **Objetivo:** Verificar el correcto funcionamiento del módulo PHY.
+- **Descripción:**
+  - Genera las señales de entrada necesarias para simular las transacciones de lectura y escritura en el PHY.
+  - Verifica que los datos se almacenen y recuperen correctamente de la memoria interna del PHY.
+  - Prueba diversas condiciones y casos de prueba para asegurar un funcionamiento robusto.
 
-#### Requisitos 📋
-- El PHY debe implementar la interfaz MDIO según la cláusula 22 del estándar IEEE 802.3.
-- El PHY debe contar con una memoria interna de 32 direcciones de 16 bits cada una.
+#### Entradas Simuladas ⚙️
 
-#### Entradas ⚙️
-- **ADDR:** Dirección de memoria donde se deben almacenar o recuperar los datos.
-- **WR_DATA:** Datos que se escribirán en la memoria en la dirección especificada por `ADDR`.
-- **WR_STB:** Indica que los datos de `WR_DATA` y `ADDR` son válidos y deben escribirse en la memoria.
+- **ADDR:** Dirección de memoria para las operaciones de lectura y escritura.
+- **WR_DATA:** Datos que se escribirán en la memoria.
+- **WR_STB:** Señal de control que indica una transacción de escritura.
 
-#### Salidas 📤
-- **RD_DATA:** Datos leídos desde la memoria en la dirección especificada por `ADDR`.
+#### Salidas Monitoreadas 📤
 
-#### Procedimiento de Prueba 💾
-1. Generar señales de reloj y reset.
-2. Simular transacciones de escritura:
-   - Aplicar valores de prueba en `WR_DATA` y `ADDR`.
-   - Activar `WR_STB` para indicar una transacción de escritura.
-   - Verificar que los datos se almacenen correctamente en la memoria.
-3. Simular transacciones de lectura:
-   - Configurar `ADDR` con las direcciones de memoria a leer.
-   - Desactivar `WR_STB` para indicar una transacción de lectura.
-   - Verificar que los datos leídos en `RD_DATA` coincidan con los valores almacenados previamente.
-4. Probar todas las direcciones de memoria.
-5. Probar condiciones de borde y casos límite.
+- **RD_DATA:** Datos leídos desde la memoria.
 
-#### Salidas Esperadas 📥
-- Archivo `.vcd` que muestra los trazos de las señales durante las pruebas.
-- Mensajes de confirmación en la consola indicando el éxito o fallo de las pruebas.
+#### Procedimientos de Prueba 🧪
+
+1. **Generación de señales de reloj y reset:**
+   - Se genera una señal de reloj y una señal de reset para inicializar el módulo PHY.
+
+2. **Prueba de escritura:**
+   - Se simulan transacciones de escritura enviando diferentes valores de **WR_DATA** y **ADDR**.
+   - Se verifica que los datos se almacenen correctamente en la memoria interna del PHY.
+
+3. **Prueba de lectura:**
+   - Se simulan transacciones de lectura enviando diferentes valores de **ADDR**.
+   - Se verifica que los datos leídos en **RD_DATA** coincidan con los valores previamente escritos en la memoria.
+
+4. **Pruebas con condiciones específicas:**
+   - Se prueban casos límite, como escribir y leer en todas las direcciones de memoria.
+   - Se verifica el funcionamiento correcto al aplicar señales de reset durante las transacciones.
+   - Se prueban casos de error, como intentar leer de una dirección no válida.
+
+#### Salidas Esperadas 📋
+
+- **Archivo de trazas (`phy_tb.vcd`):** Contiene las formas de onda de las señales simuladas, incluyendo las entradas y salidas del módulo PHY.
+- **Mensajes de confirmación:** El banco de pruebas imprimirá mensajes en la consola indicando el éxito o fallo de cada prueba realizada.
+
+#### Uso del Banco de Pruebas 🚀
+
+1. Compilar el código Verilog del banco de pruebas y el módulo PHY utilizando un compilador compatible (p. ej., Icarus Verilog).
+2. Ejecutar la simulación del banco de pruebas.
+3. Abrir el archivo de trazas (`phy_tb.vcd`) en un visor de formas de onda (p. ej., GTKWave) para inspeccionar las señales y verificar el comportamiento del módulo PHY.
+4. Revisar los mensajes impresos en la consola para confirmar el éxito o fallo de las pruebas.
+
+El banco de pruebas `phy_tb.v` permite verificar exhaustivamente el funcionamiento del módulo PHY, asegurando que cumpla con los requisitos y especificaciones establecidos.
 
 ### Uso del Makefile para Probar los Módulos y el Protocolo MDIO 🛠️
 
@@ -276,7 +294,6 @@ Para compilar y ejecutar los bancos de pruebas:
 2. Ejecuta `make` para compilar todos los módulos y bancos de pruebas.
 3. Utiliza `make controller`, `make peripheral`, y `make mdio` para testear cada componente respectivamente.
 4. Los resultados se visualizan en GTKWave usando los archivos `*.vcd` generados.
-5. Ejecuta `make clean` para limpiar los archivos, una vez finalizado. 
 
 ## Cronograma por Semanas 📅
 
@@ -307,6 +324,6 @@ Para compilar y ejecutar los bancos de pruebas:
 
 ## Fuentes y Software Usado 💻
 
-- **Estándar IEEE 802.3 (cláusula 22)** [IEEE 802.3-2018 - IEEE Standard for Ethernet](https://standards.ieee.org/ieee/802.3/7071/)
-- **Icarus Verilog:** Compilador de Verilog. [Documentación Icarus Verilog, por Stephen Williams](https://steveicarus.github.io/iverilog/) [Sitio alternativo](https://bleyer.org/icarus/)
-- **GTKWave:** Visor de formas de onda. [GTKWave, bajo GNU GPL versión 2](https://gtkwave.github.io/gtkwave/install/unix_linux.html)
+- **Estándar IEEE 802.3 (cláusula 22)**
+- **Icarus Verilog:** Compilador de Verilog.
+- **GTKWave:** Visor de formas de onda.
