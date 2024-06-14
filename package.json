@@ -1,0 +1,35 @@
+{
+  "name": "mdio-transaction-receiver",
+  "version": "1.0.0",
+  "description": "Diseño e implementación de un receptor de transacciones MDIO conforme a la cláusula 22 del estándar IEEE 802.3",
+  "main": "MDIO/MDIO_tb.v",
+  "scripts": {
+    "test": "make test",
+    "simulate": "make"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tuusuario/mdio-transaction-receiver.git"
+  },
+  "keywords": [
+    "MDIO",
+    "IEEE802.3",
+    "Verilog",
+    "Ethernet",
+    "Receptor",
+    "Controlador"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tuusuario/mdio-transaction-receiver/issues"
+  },
+  "homepage": "https://github.com/tuusuario/mdio-transaction-receiver#readme",
+  "dependencies": {
+    "iverilog": "^10.3",
+    "gtkwave": "^3.3.99"
+  },
+  "devDependencies": {
+    "verilog-syntax-highlighter": "^1.0.0"
+  }
+}
