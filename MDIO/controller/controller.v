@@ -61,6 +61,7 @@ always @(*) begin
             shift_reg = {2'b01, operation ? 2'b10 : 2'b01, phy_addr, reg_addr, 2'b10, write_data}; // Configuración dependiendo de la operación
             bit_count = 31; // Preparar contador de bits
             next_state = SEND;
+            busy = 1;
         end
         SEND: begin
             if (bit_count == -1) next_state = operation ? RECEIVE : FINISH; // Pasar a recibir si es lectura
@@ -70,6 +71,7 @@ always @(*) begin
         end
         FINISH: begin
             next_state = IDLE;
+            busy = 0;
         end
     endcase
 end
