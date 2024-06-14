@@ -19,7 +19,9 @@ Este proyecto abarca el diseño e implementación de un receptor de transaccione
 │       └── peripheral.v
 ├── Parte 1 Proyecto Final.pdf
 ├── Parte 2 Proyecto Final.pdf
+├── package.json
 └── README.md
+
 ```
 
 ### Detalles del Controlador y Periférico MDIO ⚙️
