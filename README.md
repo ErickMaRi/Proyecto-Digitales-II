@@ -15,6 +15,8 @@ Abarca el diseño e implementación de un receptor de transacciones MDIO (Manage
 │   ├── Makefile
 │   ├── MDIO_tb.v
 │   └── peripheral
+│       ├── PHY.v
+│       ├── PHY_tb.v
 │       ├── peripheral_tb.v
 │       └── peripheral.v
 ├── Parte 1 Proyecto Final.pdf
