@@ -1,4 +1,4 @@
-### Receptor de Transacciones MDIO 📡🔄💾
+# Receptor de Transacciones MDIO 📡🔄💾
 
 ## Descripción del Proyecto 📝
 
@@ -22,7 +22,7 @@ Este proyecto abarca el diseño e implementación de un receptor de transaccione
 └── README.md
 ```
 
-### Detalles del Controlador y Periférico MDIO ⚙️
+## Detalles del Controlador y Periférico MDIO ⚙️
 
 ### Protocolo MDIO 🔄
 
@@ -156,6 +156,48 @@ El periférico MDIO actúa como un receptor de transacciones MDIO de acuerdo con
 3. Las operaciones de lectura y escritura se sincronizan con las señales de control del controlador MDIO.
 4. El periférico no realiza ninguna operación adicional además de almacenar y recuperar los registros según las transacciones MDIO.
 
+### Physical Layer Device (PHY) 📶
+
+#### Descripción 📝
+
+El Physical Layer Device (PHY) es un dispositivo que implementa la capa física del estándar Ethernet IEEE 802.3. Su función principal es actuar como una interfaz entre el medio físico de transmisión (cable de red) y el controlador MDIO. Almacena y proporciona datos según las transacciones de lectura y escritura recibidas a través de la interfaz MDIO.
+
+#### Interfaz MDIO 🔌
+
+El PHY se comunica con el controlador MDIO a través de las siguientes señales:
+
+#### Entradas ⚙️
+
+- **ADDR:** Dirección de memoria donde se deben almacenar o recuperar los datos. (5 bits)
+- **WR_DATA:** Datos que se escribirán en la memoria en la dirección especificada por `ADDR`. (16 bits)
+- **WR_STB:** Indica que los datos de `WR_DATA` y `ADDR` son válidos y deben escribirse en la memoria.
+
+#### Salidas 📤
+
+- **RD_DATA:** Datos leídos desde la memoria en la dirección especificada por `ADDR`. (16 bits)
+
+#### Funcionamiento 🚀
+
+1. **Escritura:**
+   - Cuando se recibe una transacción de escritura (`WR_STB = 1`), los datos presentes en `WR_DATA` se almacenan en la dirección de memoria indicada por `ADDR`.
+
+2. **Lectura:**
+   - Cuando se recibe una transacción de lectura (`WR_STB = 0`), los datos almacenados en la dirección de memoria indicada por `ADDR` se cargan en `RD_DATA`.
+
+#### Memoria Interna 💾
+
+El PHY cuenta con una memoria interna para almacenar los registros de configuración y estado. La memoria está organizada en 32 direcciones de 16 bits cada una, siguiendo el espacio de direcciones establecido por el estándar IEEE 802.3.
+
+```
+Memoria PHY:
+  Dirección  | Contenido
+  -----------+---------------
+  0x00       | Registro 0
+  0x01       | Registro 1
+  ...        | ...
+  0x1F       | Registro 31
+```
+
 ### Bancos de Pruebas 🛠️
 
 #### `controller_tb.v`
@@ -222,7 +264,7 @@ Para compilar y ejecutar los bancos de pruebas:
 | **Semana 3**               | 22 de junio - 24 de junio | - Finalización de la programación de los módulos (24 de junio) <br> - Desarrollo de los bancos de pruebas `controller_tb.v` y `peripheral_tb.v` |
 | **Semana 4**               | 24 de junio - 1 de julio | - Integración del sistema completo <br> - Desarrollo del banco de pruebas `MDIO_tb.v` <br> - Verificación y simulación de las transacciones MDIO completas <br> - Finalización de la documentación en LaTeX y el afiche |
 
-### Fuentes y Software Usado 💻
+## Fuentes y Software Usado 💻
 
 - **Estándar IEEE 802.3 (cláusula 22)**
 - **Icarus Verilog:** Compilador de Verilog.
