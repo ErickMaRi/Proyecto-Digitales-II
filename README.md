@@ -194,6 +194,7 @@ Para compilar y ejecutar los bancos de pruebas:
 2. Ejecuta `make` para compilar todos los módulos y bancos de pruebas.
 3. Utiliza `make controller`, `make peripheral`, y `make mdio` para testear cada componente respectivamente.
 4. Los resultados se visualizan en GTKWave usando los archivos `*.vcd` generados.
+5. Ejecuta `make clean` para limpiar los archivos, una vez finalizado. 
 
 ## Cronograma por Semanas 📅
 
