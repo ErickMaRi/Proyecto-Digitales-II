@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tuusuario/mdio-transaction-receiver.git"
+    "url": "git+https://github.com/ErickMaRi/Proyecto-Digitales-II.git"
   },
   "keywords": [
     "MDIO",
@@ -19,12 +19,12 @@
     "Receptor",
     "Controlador"
   ],
-  "author": "Tu Nombre",
+  "author": "Erick MaRi",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tuusuario/mdio-transaction-receiver/issues"
+    "url": "https://github.com/ErickMaRi/Proyecto-Digitales-II/issues"
   },
-  "homepage": "https://github.com/tuusuario/mdio-transaction-receiver#readme",
+  "homepage": "https://github.com/ErickMaRi/Proyecto-Digitales-II#readme",
   "dependencies": {
     "iverilog": "^10.3",
     "gtkwave": "^3.3.99"
