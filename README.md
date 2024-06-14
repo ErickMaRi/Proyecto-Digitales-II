@@ -24,21 +24,69 @@ Este proyecto abarca el diseño e implementación de un receptor de transaccione
 
 ### Detalles del Controlador y Periférico MDIO ⚙️
 
-#### Protocolo MDIO 🔄
-- **Formato de Transacción:** Serial de 32 bits.
-- **Estructura de Transacción:**
+### Protocolo MDIO 🔄
 
-| Bit(s) | Campo             | Descripción                                                                 |
-|--------|-------------------|-----------------------------------------------------------------------------|
-| 31-30  | ST (Start)        | Código de inicio de trama (01 para Clause 22)                               |
-| 29-28  | Op Code           | 10: Lectura, 01: Escritura                                                  |
-| 27-23  | PHY Address       | Dirección del dispositivo PHY                                               |
-| 22-18  | Reg Address       | Dirección del registro a leer o escribir en el dispositivo PHY              |
-| 17-16  | TA (Turnaround)   | Tiempo de espera para cambio de control del bus                             |
-| 15-0   | Data              | Datos a escribir o leídos                                                   |
+El protocolo MDIO (Management Data Input/Output), definido en la cláusula 22 de IEEE 802.3, establece la comunicación serial entre un controlador (station management entity, STA) y dispositivos PHY. Aquí se describe de manera técnica y detallada.
 
-- **Señales Usadas:** MDC (reloj) y MDIO (datos).
-- **Comportamiento:** Las transacciones se transmiten bit a bit en cada ciclo de reloj MDC.
+#### Señales Principales
+
+**22.2.2.13 MDC (Management Data Clock):**
+- **Función:** Señal de reloj generada por el controlador hacia el PHY, utilizada como referencia de tiempo para la transferencia de información.
+- **Características:**
+  - Señal aperiódica.
+  - Sin tiempos máximos de alto o bajo.
+  - Tiempos mínimos de alto y bajo: 160 ns cada uno.
+  - Periodo mínimo: 400 ns.
+
+**22.2.2.14 MDIO (Management Data Input/Output):**
+- **Función:** Señal bidireccional entre el controlador y el PHY para transferir información de control y estado.
+- **Características:**
+  - Controlada por el controlador y muestreada por el PHY para la información de control.
+  - Controlada por el PHY y muestreada por el controlador para la información de estado.
+  - Conducción mediante circuitos de tres estados, permitiendo al controlador o al PHY manejar la señal.
+  - PHY debe proporcionar un pull-up resistivo para mantener la señal en estado alto.
+  - Controlador debe incorporar un pull-down resistivo para determinar la conexión del PHY.
+
+#### Estructura de la Transacción MDIO
+
+Cada transacción consta de 32 bits sincronizados por MDC:
+
+| Bit(s) | Campo             | Descripción                             |
+|--------|-------------------|-----------------------------------------|
+| 31-30  | ST (Start)        | 01 indica inicio de transacción         |
+| 29-28  | Op Code           | 10: Lectura, 01: Escritura              |
+| 27-23  | PHY Address       | Dirección del dispositivo PHY           |
+| 22-18  | Reg Address       | Dirección del registro en el PHY        |
+| 17-16  | TA (Turnaround)   | Cambio de control del bus               |
+| 15-0   | Data              | Datos a escribir o leídos               |
+
+#### Ejemplos de Transacciones
+
+**Escritura:**
+1. **Inicio:**
+   - Bits ST: `01`
+   - Código de operación: `01` (Escritura)
+   - Dirección PHY: `00001` (1)
+   - Dirección Registro: `00010` (2)
+   - Turnaround: `10`
+   - Datos: `0000000000001100` (12)
+
+```
+Transacción Escrita: 01 01 00001 00010 10 0000000000001100
+```
+
+**Lectura:**
+1. **Inicio:**
+   - Bits ST: `01`
+   - Código de operación: `10` (Lectura)
+   - Dirección PHY: `00001` (1)
+   - Dirección Registro: `00010` (2)
+   - Turnaround: `10`
+   - Datos: `[datos proporcionados por el PHY]`
+
+```
+Transacción Lectura: 01 10 00001 00010 10 [datos]
+```
 
 ### Controlador MDIO 🎛️
 
