@@ -19,7 +19,9 @@ Este proyecto abarca el diseño e implementación de un receptor de transaccione
 │       └── peripheral.v
 ├── Parte 1 Proyecto Final.pdf
 ├── Parte 2 Proyecto Final.pdf
+├── package.json
 └── README.md
+
 ```
 
 ## Detalles del Controlador y Periférico MDIO ⚙️
@@ -236,6 +238,7 @@ Para compilar y ejecutar los bancos de pruebas:
 2. Ejecuta `make` para compilar todos los módulos y bancos de pruebas.
 3. Utiliza `make controller`, `make peripheral`, y `make mdio` para testear cada componente respectivamente.
 4. Los resultados se visualizan en GTKWave usando los archivos `*.vcd` generados.
+5. Ejecuta `make clean` para limpiar los archivos, una vez finalizado. 
 
 ## Cronograma por Semanas 📅
 
@@ -266,6 +269,6 @@ Para compilar y ejecutar los bancos de pruebas:
 
 ## Fuentes y Software Usado 💻
 
-- **Estándar IEEE 802.3 (cláusula 22)**
-- **Icarus Verilog:** Compilador de Verilog.
-- **GTKWave:** Visor de formas de onda.
+- **Estándar IEEE 802.3 (cláusula 22)** [IEEE 802.3-2018 - IEEE Standard for Ethernet](https://standards.ieee.org/ieee/802.3/7071/)
+- **Icarus Verilog:** Compilador de Verilog. [Documentación Icarus Verilog, por Stephen Williams](https://steveicarus.github.io/iverilog/) [Sitio alternativo](https://bleyer.org/icarus/)
+- **GTKWave:** Visor de formas de onda. [GTKWave, bajo GNU GPL versión 2](https://gtkwave.github.io/gtkwave/install/unix_linux.html)
