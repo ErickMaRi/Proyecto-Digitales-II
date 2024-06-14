@@ -230,6 +230,44 @@ Memoria PHY:
   - Verificación de la coordinación entre el controlador y el periférico.
 - **Salidas Esperadas:** Tramas detalladas en `.vcd` mostrando las transacciones completas y la correcta operación del sistema.
 
+En el archivo README.md no se encuentra documentación específica para un banco de pruebas del PHY (Physical Layer Device). Sin embargo, podemos deducir algunos aspectos basados en la información proporcionada sobre el PHY y los bancos de pruebas existentes.
+
+Aquí está una posible documentación para un banco de pruebas del PHY:
+
+### Banco de Pruebas PHY 📶
+
+#### Descripción 📝
+El banco de pruebas PHY tiene como objetivo verificar el correcto funcionamiento del dispositivo PHY, simulando las transacciones MDIO de lectura y escritura, y validando que los datos se almacenen y se recuperen adecuadamente en la memoria interna del PHY.
+
+#### Requisitos 📋
+- El PHY debe implementar la interfaz MDIO según la cláusula 22 del estándar IEEE 802.3.
+- El PHY debe contar con una memoria interna de 32 direcciones de 16 bits cada una.
+
+#### Entradas ⚙️
+- **ADDR:** Dirección de memoria donde se deben almacenar o recuperar los datos.
+- **WR_DATA:** Datos que se escribirán en la memoria en la dirección especificada por `ADDR`.
+- **WR_STB:** Indica que los datos de `WR_DATA` y `ADDR` son válidos y deben escribirse en la memoria.
+
+#### Salidas 📤
+- **RD_DATA:** Datos leídos desde la memoria en la dirección especificada por `ADDR`.
+
+#### Procedimiento de Prueba 💾
+1. Generar señales de reloj y reset.
+2. Simular transacciones de escritura:
+   - Aplicar valores de prueba en `WR_DATA` y `ADDR`.
+   - Activar `WR_STB` para indicar una transacción de escritura.
+   - Verificar que los datos se almacenen correctamente en la memoria.
+3. Simular transacciones de lectura:
+   - Configurar `ADDR` con las direcciones de memoria a leer.
+   - Desactivar `WR_STB` para indicar una transacción de lectura.
+   - Verificar que los datos leídos en `RD_DATA` coincidan con los valores almacenados previamente.
+4. Probar todas las direcciones de memoria.
+5. Probar condiciones de borde y casos límite.
+
+#### Salidas Esperadas 📥
+- Archivo `.vcd` que muestra los trazos de las señales durante las pruebas.
+- Mensajes de confirmación en la consola indicando el éxito o fallo de las pruebas.
+
 ### Uso del Makefile para Probar los Módulos y el Protocolo MDIO 🛠️
 
 Para compilar y ejecutar los bancos de pruebas:
