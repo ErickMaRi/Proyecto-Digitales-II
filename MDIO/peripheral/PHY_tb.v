@@ -3,6 +3,17 @@
 // POR LO QUE SE USA EL FLAG -g2012
 // iverilog -g2012 -o sim  PHY.v PHY_tb.v
 
+// Parece que PHY ya funciona, pero no puedo ver memory
+// (registro interno de PHY) en gtkwave, logré observar que
+// se declaraban en efecto los registros y que estos existen
+// y se comportan como esperaba pero:
+//     1- Sólo cuando declaré una peineta de wires alambrados a los
+//     registros de memory (como salidas) y edité el testbench para
+//     volcar todas las salidas.
+//     2- Cuando elimino estos cambios (que introducen un montón de
+//     cables inecesarios) los registros memory de nuevo no son visibles.
+//     3- Los anteriores dos puntos implican que en realidad el módulo
+//     PHY no logra ser verificado.
 `timescale 1ns/1ps
 
 module PHY_tb;
@@ -30,6 +41,7 @@ module PHY_tb;
     initial begin
         $dumpfile("sim.vcd");
         $dumpvars(0, PHY_tb);
+        $dumpvars(0, dut);
 
         clk = 0;
         reset = 1;
