@@ -234,10 +234,6 @@ El módulo PHY no realiza ninguna operación adicional además de almacenar y re
   - Verificación de la coordinación entre el controlador y el periférico.
 - **Salidas Esperadas:** Tramas detalladas en `.vcd` mostrando las transacciones completas y la correcta operación del sistema.
 
-Aquí está la documentación del banco de pruebas (testbench) para el módulo PHY:
-
-### Banco de Pruebas PHY 🧪
-
 #### `phy_tb.v`
 
 - **Objetivo:** Verificar el correcto funcionamiento del módulo PHY.
