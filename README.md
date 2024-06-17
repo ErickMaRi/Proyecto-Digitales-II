@@ -322,6 +322,7 @@ Para compilar y ejecutar los bancos de pruebas:
 
 ## Fuentes y Software Usado 💻
 
-- **Estándar IEEE 802.3 (cláusula 22)**
-- **Icarus Verilog:** Compilador de Verilog.
-- **GTKWave:** Visor de formas de onda.
+
+- **Estándar IEEE 802.3 (cláusula 22)** [IEEE 802.3-2018 - IEEE Standard for Ethernet](https://standards.ieee.org/ieee/802.3/7071/)
+- **Icarus Verilog:** Compilador de Verilog. [Documentación Icarus Verilog, por Stephen Williams](https://steveicarus.github.io/iverilog/) [Sitio alternativo](https://bleyer.org/icarus/)
+- **GTKWave:** Visor de formas de onda. [GTKWave, bajo GNU GPL versión 2](https://gtkwave.github.io/gtkwave/install/unix_linux.html)
