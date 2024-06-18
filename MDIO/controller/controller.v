@@ -29,8 +29,8 @@ module mdio_controller(
     input wire [31:0] t_data,   // Señal de datos de entrada
     input wire mdio_in,         // Señal de datos MDIO recibidos
     output reg [15:0] rd_data,  // Datos MDIO leídos
-    output reg data_rdy         // Señal de datos listos
-    output reg mdc              // Señal de reloj del protocolo MDIO
+    output reg data_rdy,         // Señal de datos listos
+    output reg mdc,              // Señal de reloj del protocolo MDIO
     output reg mdio_oe,         // Señal de habilitación de salida mdio_out
     output reg mdio_out         // Señal de datos MDIO enviados
 );
@@ -72,14 +72,14 @@ always @(posedge clk) begin
     end
 end
 
-// Lógica de transición de estado
+/* Lógica de transición de estado
 always @(*) begin
     next_state = state;
     case (state)
         IDLE: begin
-            if (start) next_state = PREPARE;
+            if (start) next_state = STar;
         end
-        PREPARE: begin
+        STar: begin
             shift_reg = {2'b01, operation ? 2'b10 : 2'b01, phy_addr, reg_addr, 2'b10, write_data}; // Configuración dependiendo de la operación
             bit_count = 31; // Preparar contador de bits
             next_state = SEND;
@@ -115,5 +115,5 @@ always @(posedge mdc) begin
         mdio_oe <= 0;
     end
 end
-
+*/
 endmodule
