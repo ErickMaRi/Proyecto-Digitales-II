@@ -1,31 +1,56 @@
+/************************************************************
+                    Universidad de Costa Rica
+                 Escuela de Ingenieria Electrica
+                            IE0523
+                   Circuitos Digitales 2
+
+                        controller.v
+
+Autores: 
+        Brenda Romero Solano  brenda.romero@ucr.ac.cr
+
+Fecha: [fecha de modificación] 
+    
+*********************************************************** */ 
+
+
+//! @title Controlador MDIO
+/**
+ * Descripción pendiente.
+ */
+
 `timescale 1ns / 1ps
 
+
 module mdio_controller(
-    input wire clk,
-    input wire reset,
-    input wire mdio_in,
-    output reg mdio_out,
-    output reg mdio_oe,
-    output reg mdc,
-    input wire [4:0] phy_addr,
-    input wire [4:0] reg_addr,
-    input wire [15:0] write_data,
-    output reg [15:0] read_data,
-    input wire start,
-    input wire operation, // 0 para escritura, 1 para lectura
-    output reg busy
+    input wire clk,             // Reloj de sistema
+    input wire reset,           // Señal de reset
+    input wire mdio_start,      // Señal de inicio de  una operación
+    input wire [31:0] t_data,   // Señal de datos de entrada
+    input wire mdio_in,         // Señal de datos MDIO recibidos
+    output reg [15:0] rd_data,  // Datos MDIO leídos
+    output reg data_rdy         // Señal de datos listos
+    output reg mdc              // Señal de reloj del protocolo MDIO
+    output reg mdio_oe,         // Señal de habilitación de salida mdio_out
+    output reg mdio_out         // Señal de datos MDIO enviados
 );
 
 // Estados del controlador MDIO
-localparam IDLE = 0,
-           PREPARE = 1,
-           SEND = 2,
-           RECEIVE = 3,
-           FINISH = 4;
+localparam IDLE = 0,          // Espera una transacción MDIO.
+           START = 1,         // inicio de la trama (01).
+           OP_CODE = 2,       // Determina si la operación es lectura (10) o escritura (01).
+           PHY_ADDR = 3,      // Carga la dirección del dispositivo PHY en address_reg.
+           REG_ADDR = 4,      // Carga la dirección del registro en address_reg.
+           TURNAROUND = 5,    // Espera cambio de control del bus.
+           WRITE_DATA = 6,    // Envía los datos seriales (en escritura).
+           READ_DATA = 7;     // Recibe los datos seriales (en lectura).
 
-integer state = IDLE, next_state = IDLE;
-integer bit_count; // Contador de bits enviados/recibidos
-reg [31:0] shift_reg; // Registro de desplazamiento para la trama MDIO
+reg [31:0] address_reg; // Dirección del dispositivo PHY y el registro a leer/escribir
+reg [15:0] data_reg;    // Registro que almacena los datos a enviar o recibir
+
+// Estados del controlador MDIO
+reg [2:0] state;
+reg [2:0] next_state;
 
 // Generación del reloj MDIO (MDC)
 always @(posedge clk) begin
@@ -40,11 +65,8 @@ end
 always @(posedge clk) begin
     if (reset) begin
         state <= IDLE;
-        busy <= 0;
-        mdio_oe <= 0;
-        mdio_out <= 0;
-        read_data <= 0;
-        shift_reg <= 0;
+        next_state <= IDLE;
+        // Resto de las asignaciones de reset
     end else begin
         state <= next_state;
     end
