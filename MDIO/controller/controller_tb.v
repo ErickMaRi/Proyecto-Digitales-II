@@ -14,7 +14,7 @@ Fecha: [fecha de modificación]
 *********************************************************** */ 
 
 
-//! @title Controlador MDIO
+//! @title Testbench dell controlador del MDIO
 /**
  * Descripción pendiente.
  */
