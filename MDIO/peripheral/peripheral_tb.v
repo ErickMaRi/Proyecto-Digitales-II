@@ -1,32 +1,54 @@
+/************************************************************
+                    Universidad de Costa Rica
+                 Escuela de Ingenieria Electrica
+                            IE0523
+                   Circuitos Digitales 2
+
+                        peripheral_tb.v
+
+Autores: 
+        Brenda Romero Solano  brenda.romero@ucr.ac.cr
+
+Fecha: [fecha de modificación] 
+    
+*********************************************************** */ 
+
+
+//! @title Testbench del periférico del MDIO
+/**
+ * Descripción pendiente.
+ */
 `include "peripheral/peripheral.v"
 `timescale 1ns / 1ps
 
 module peripheral_tb;
 
 // Declaración de señales
-reg MDC;
-reg RESET;
-reg MDIO_OUT;
-reg MDIO_OE;
-reg [15:0] RD_DATA;
-wire MDIO_DONE;
-wire MDIO_IN;
-wire [4:0] ADDR;
-wire [15:0] WR_DATA;
-wire WR_STB;
+ // Inputs
+    reg RESET;
+    reg [15:0] RD_DATA;
+    reg MDC;
+    reg MDIO_OE;
+    reg MDIO_OUT;
+    // Outputs
+    wire [4:0] ADDR; 
+    wire [15:0] WR_DATA;   
+    wire MDIO_DONE;
+    wire WR_STB;
+    wire MDIO_IN;
 
 // Instancia del módulo bajo prueba
 peripheral dut (
-    .MDC(MDC),
     .RESET(RESET),
-    .MDIO_OUT(MDIO_OUT),
-    .MDIO_OE(MDIO_OE),
     .RD_DATA(RD_DATA),
-    .MDIO_DONE(MDIO_DONE),
-    .MDIO_IN(MDIO_IN),
+    .MDC(MDC),
+    .MDIO_OE(MDIO_OE),
+    .MDIO_OUT(MDIO_OUT),
     .ADDR(ADDR),
     .WR_DATA(WR_DATA),
-    .WR_STB(WR_STB)
+    .MDIO_DONE(MDIO_DONE),
+    .WR_STB(WR_STB),
+    .MDIO_IN(MDIO_IN)
 );
 
 // Generador de reloj

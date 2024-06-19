@@ -32,7 +32,7 @@ SIMULATOR_FLAGS = -o
 WAVEFORM_VIEWER = gtkwave
 
 # Default target
-all: peripheral controller mdio clean
+all: controller peripheral mdio clean
 
 # Compile Verilog files
 peripheral: sim_peripheral

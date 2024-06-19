@@ -1,32 +1,57 @@
+/************************************************************
+                    Universidad de Costa Rica
+                 Escuela de Ingenieria Electrica
+                            IE0523
+                   Circuitos Digitales 2
+
+                        peripheral.v
+
+Autores: 
+        Brenda Romero Solano  brenda.romero@ucr.ac.cr
+
+Fecha: [fecha de modificación] 
+    
+*********************************************************** */ 
+
+
+//! @title Periférico MDIO
+/**
+ * Descripción pendiente.
+ */
 module peripheral (
-    input wire MDC,
-    input wire RESET,
-    input wire MDIO_OUT,
-    input wire MDIO_OE,
-    input wire [15:0] RD_DATA,
-    output reg MDIO_DONE,
-    output reg MDIO_IN,
-    output reg [4:0] ADDR,
-    output reg [15:0] WR_DATA,
-    output reg WR_STB
+    input wire RESET,           // Señal de RESET
+    input wire [15:0] RD_DATA,  // Datos MDIO leídos
+    input wire MDC,             // Señal de reloj del protocolo MDIO
+    input wire MDIO_OE,         // Señal de habilitación de salida MDIO_OUT
+    input wire MDIO_OUT,        // Señal de datos MDIO enviados
+    output reg [4:0] ADDR,      // Dirección
+    output reg [15:0] WR_DATA,  // Datos de escritura
+    output reg MDIO_DONE,      // Señal de finalización de transacción MDIO
+    output reg WR_STB,         // Señal de escritura
+    output reg MDIO_IN          // Datos MDIO recibidos
 );
 
 // Declaración de estados
-parameter IDLE = 3'b000, CAPTURA_OP = 3'b001, CAPTURA_ADDR = 3'b010,
-          CAPTURA_DATOS_WR = 3'b011, ENVIAR_DATOS_RD = 3'b100, FINALIZAR = 3'b101;
+localparam IDLE = 3'b000,               // Espera una transacción MDIO.
+           CAPTURA_OP = 3'b001,         // Captura el bit de operación
+           CAPTURA_ADDR = 3'b010,       // Captura la dirección
+           CAPTURA_DATOS_WR = 3'b011,   // Captura los datos de escritura
+           ENVIAR_DATOS_RD = 3'b100,    // Envía los datos de lectura
+           FINALIZAR = 3'b101;          // Finaliza la transacción
 
 // Registros internos
-reg [2:0] estado_actual, estado_siguiente;
-reg [4:0] bit_cnt;
-reg [4:0] reg_addr;
-reg [15:0] reg_datos;
-reg op_bit;
+reg [2:0] estado_actual;             // Estado actual de la máquina de estados
+reg [2:0] estado_siguiente;          // Estado siguiente de la máquina de estados
+reg [5:0] bit_cnt;                   // Contador de bits
+reg [4:0] reg_addr;                  // Dirección capturada
+reg [15:0] reg_datos;                // Datos capturados
+reg op_bit;                          // Bit de operación capturado
 
 // Máquina de estados
 always @(posedge MDC or posedge RESET) begin
     if (RESET) begin
         estado_actual <= IDLE;
-        bit_cnt <= 5'd0;
+        bit_cnt <= 6'd0;
         reg_addr <= 5'd0;
         reg_datos <= 16'd0;
         MDIO_DONE <= 1'b0;
@@ -72,10 +97,10 @@ always @(posedge MDC or posedge RESET) begin
                 end
             end
             ENVIAR_DATOS_RD: begin
-                if (bit_cnt >= 5'd17 && bit_cnt <= 5'd32) begin
+                if (bit_cnt >= 5'd17 && bit_cnt <= 6'd32) begin
                     MDIO_IN <= reg_datos[bit_cnt - 5'd17]; // Envía los datos de lectura
                 end
-                if (bit_cnt == 5'd32) begin
+                if (bit_cnt == 6'd32) begin
                     estado_siguiente <= FINALIZAR;
                 end else begin
                     bit_cnt <= bit_cnt + 5'd1;
