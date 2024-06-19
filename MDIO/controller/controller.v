@@ -23,16 +23,16 @@ Fecha: [fecha de modificación]
 
 
 module mdio_controller(
-    input wire clk,             // Reloj de sistema
-    input wire reset,           // Señal de reset
-    input wire mdio_start,      // Señal de inicio de  una operación
-    input wire [31:0] t_data,   // Señal de datos de entrada
-    input wire mdio_in,         // Señal de datos MDIO recibidos
-    output reg [15:0] rd_data,  // Datos MDIO leídos
-    output reg data_rdy,         // Señal de datos listos
-    output reg mdc,              // Señal de reloj del protocolo MDIO
-    output reg mdio_oe,         // Señal de habilitación de salida mdio_out
-    output reg mdio_out         // Señal de datos MDIO enviados
+    input wire CLK,             // Reloj de sistema
+    input wire RESET,           // Señal de RESET
+    input wire MDIO_START,      // Señal de inicio de  una operación
+    input wire [31:0] T_DATA,   // Señal de datos de entrada
+    input wire MDIO_IN,         // Señal de datos MDIO recibidos
+    output reg [15:0] RD_DATA,  // Datos MDIO leídos
+    output reg DATA_RDY,        // Señal de datos listos
+    output reg MDC,             // Señal de reloj del protocolo MDIO
+    output reg MDIO_OE,         // Señal de habilitación de salida MDIO_OUT
+    output reg MDIO_OUT         // Señal de datos MDIO enviados
 );
 
 // Estados del controlador MDIO
@@ -50,25 +50,59 @@ reg [15:0] data_reg;    // Registro que almacena los datos a enviar o recibir
 
 // Estados del controlador MDIO
 reg [2:0] state;
-reg [2:0] next_state;
 
 // Generación del reloj MDIO (MDC)
-always @(posedge clk) begin
-    if (reset) begin
-        mdc <= 0;
+always @(posedge CLK) begin
+    if (RESET) begin
+        MDC <= 0;
     end else begin
-        mdc <= ~mdc; // Toggle MDC en cada ciclo de reloj
+        MDC <= ~MDC; // Toggle MDC en cada ciclo de reloj
     end
 end
 
 // Lógica de control de estado
-always @(posedge clk) begin
-    if (reset) begin
+always @(posedge CLK) begin
+    if (RESET) begin
         state <= IDLE;
-        next_state <= IDLE;
-        // Resto de las asignaciones de reset
+        address_reg <= 0;	
+        data_reg <= 0;
+        RD_DATA <= 0;
+        DATA_RDY <= 0;
+        RD_DATA <= 0;
+        DATA_RDY <= 0;
+        MDC <= 0;
+        MDIO_OE <= 0;
+        MDIO_OUT <= 0;
     end else begin
-        state <= next_state;
+        // Lógica de transición de estado temporal
+        case (state)
+            IDLE: begin
+                if (MDIO_START) begin
+                    state <= START;
+                end
+            end
+            START: begin
+                state <= OP_CODE;
+            end
+            OP_CODE: begin
+                state <= PHY_ADDR;
+            end
+            PHY_ADDR: begin
+                state <= REG_ADDR;
+            end
+            REG_ADDR: begin
+                state <= TURNAROUND;
+            end
+            TURNAROUND: begin
+                state <= WRITE_DATA;
+            end
+            WRITE_DATA: begin
+                state <= READ_DATA;
+            end
+            READ_DATA: begin
+                state <= IDLE;
+            end
+        endcase
     end
 end
 
@@ -99,20 +133,20 @@ always @(*) begin
 end
 
 // Lógica de manejo de datos MDIO
-always @(posedge mdc) begin
+always @(posedge MDC) begin
     if (state == SEND) begin
-        mdio_oe <= 1;
-        mdio_out <= shift_reg[31];
+        MDIO_OE <= 1;
+        MDIO_OUT <= shift_reg[31];
         shift_reg <= shift_reg << 1;
         bit_count <= bit_count - 1;
     end else if (state == RECEIVE) begin
-        mdio_oe <= 0;
+        MDIO_OE <= 0;
         if (bit_count >= 0) begin
-            read_data[bit_count] <= mdio_in;
+            read_data[bit_count] <= MDIO_IN;
         end
         bit_count <= bit_count - 1;
     end else begin
-        mdio_oe <= 0;
+        MDIO_OE <= 0;
     end
 end
 */
