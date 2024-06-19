@@ -110,8 +110,8 @@ El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las
 - **MDIO_OUT:** *Salida serial*. Cuando se habilita **MDIO_START=1**, se envía a través de la salida **MDIO_OUT** los bits que se observan en la entrada T_DATA, empezando por el bit más significativo y hasta completar los 32 bits. (1 bit) (Señal hacia los periféricos)
 
 #### Registros Internos 💾
-- **address_reg:** Registro que almacena la dirección del dispositivo PHY y el registro a leer/escribir.
-- **data_reg:** Registro que almacena los datos a enviar o recibir.
+- **address_reg:** Registro que almacena la dirección del dispositivo PHY y el registro a leer/escribir (5 bits).
+- **data_reg:** Registro que almacena los datos a enviar o recibir (16 bits).
 
 #### Máquina de Estados 🏭
 1. **IDLE:** Estado inicial. Espera una transacción MDIO.

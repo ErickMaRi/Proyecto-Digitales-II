@@ -82,22 +82,28 @@ module controller_tb;
         data = 16'hABCD;
         operation = 2'b01; // Operación de escritura
         ta = 2'b00;
+        MDIO_START = 1'b1;
         T_DATA = {2'b01, operation, phy_addr, reg_addr, ta, data};
-        #10; // Iniciar la operación
+
+        #10 MDIO_START = 1'b0; // Iniciar la operación
 
         // Esperar la duración de SEND
-        #650; // 640 ns para la transacción + 10 ns de margen
+        #650  MDIO_START = 2'b0; // 640 ns para la transacción + 10 ns de margen
 
         // Test de lectura
         #20; // Tiempo antes de iniciar la siguiente transacción
         phy_addr = 5'b00011;
         reg_addr = 5'b00100;
-        data = 16'hABCD;
-        operation = 2'b10; // Operación de escritura
+        data = 16'h0000;
+        operation = 2'b10; // Operación de lectura
         ta = 2'b00;
         T_DATA = {2'b01, operation, phy_addr, reg_addr, ta, data};
-        MDIO_IN = 1;
-        #10; MDIO_IN = 0;
+        MDIO_START = 1'b1;
+        #10 MDIO_START = 1'b0;
+        #160 MDIO_IN = 1'b1;
+        #40 MDIO_IN = 1'b0;
+        #80 MDIO_IN = 1'b1;
+        #40 MDIO_IN = 1'b0;
 
         // Esperar la duración de SEND + RECEIVE
         #1290; // (640 ns * 2) para SEND + RECEIVE + 10 ns de margen
