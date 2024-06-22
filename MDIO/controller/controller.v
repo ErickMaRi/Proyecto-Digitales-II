@@ -48,19 +48,27 @@ localparam IDLE = 0,          // Espera una transacción MDIO.
 // Variables de control del estado
 reg [4:0] contador;     // Contador para el seguimiento de bits
 reg [2:0] state;        // Estado actual del controlador MDIO
-
+reg [15:0] data_reg;     // Registro de dirección del registro
 // Generación del reloj MDIO (MDC)
 always @(posedge CLK) begin
-    if (RESET) begin
+    if (~RESET) begin
         MDC <= 0;
     end else if (state != IDLE) begin
         MDC <= ~MDC; // Toggle MDC en cada ciclo de reloj
+    end else begin
+        MDC <= 0;
+        RD_DATA <= 0;
+        DATA_RDY <= 0;
+        MDC <= 0;
+        MDIO_OE <= 0;
+        MDIO_OUT <= 0;
     end
 end
 
 // Lógica de control de estado
 always @(posedge CLK) begin
-    if (RESET) begin
+    if (~RESET) begin
+        data_reg <= 0;
         RD_DATA <= 0;
         DATA_RDY <= 0;
         MDC <= 0;
@@ -68,62 +76,57 @@ always @(posedge CLK) begin
         MDIO_OUT <= 0;
         contador <= 5'd31;
         state <= IDLE;
+
     end else begin
         // Lógica de transición de estado temporal
-
-        case (state)
-            IDLE: begin
-                RD_DATA <= 0;
-                DATA_RDY <= 0;
-                MDC <= 0;
-                MDIO_OE <= 0;
-                MDIO_OUT <= 0;
-                if (MDIO_START) begin
-                    state <= START;
-                end
-            end 
-            START: begin
-                MDIO_OUT <= T_DATA[contador]; 
-                state <= contador == 30? OP_CODE: START;
-                MDIO_OE <= 1;
-            end
-            OP_CODE: begin
-                MDIO_OUT <= T_DATA[contador];
-                state <= contador == 28? PHY_ADDR: OP_CODE;
-            end
-            PHY_ADDR: begin
-                MDIO_OUT <= T_DATA[contador]; 
-                state <= contador == 23? REG_ADDR: PHY_ADDR;
-            end
-            REG_ADDR: begin
-                MDIO_OUT <= T_DATA[contador]; 
-                state <= contador == 18? TURNAROUND : REG_ADDR;
-            end
-            TURNAROUND: begin
-                MDIO_OUT <= T_DATA[contador]; 
-                if (contador == 16) begin
-                    if (T_DATA[29]) begin
-                        state <= READ_DATA;
-                    end else begin
-                        state <= WRITE_DATA;
-                    end
-                end else begin
-                    state <= TURNAROUND;
-                end
-            end
-            WRITE_DATA: begin
-                MDIO_OUT <= T_DATA[contador]; 
-                state <= contador == 0 ?  IDLE: WRITE_DATA;
-                DATA_RDY <= contador == 0 ? 1: 0;
-            end
-            READ_DATA: begin
-                MDIO_OUT <= 0;
-                RD_DATA[contador] <= MDIO_IN; 
-                state <= contador == 0 ?  IDLE: READ_DATA;
-                DATA_RDY <= contador == 0 ? 1: 0;
-            end
-        endcase
+        state <= state == IDLE ? MDIO_START ? START: IDLE : state;
     end
+end
+
+always @(posedge MDC) begin
+    case (state)
+    IDLE: begin
+        RD_DATA <= 0;
+        DATA_RDY <= 0;
+        MDC <= 0;
+        MDIO_OE <= 0;
+        MDIO_OUT <= 0;
+    end 
+    START: begin
+        MDIO_OUT <= T_DATA[contador]; 
+        state <= contador == 30? OP_CODE: START;
+        MDIO_OE <= 1;
+    end
+    OP_CODE: begin
+        MDIO_OUT <= T_DATA[contador];
+        state <= contador == 28? PHY_ADDR: OP_CODE;
+    end
+    PHY_ADDR: begin
+        MDIO_OUT <= T_DATA[contador]; 
+        state <= contador == 23? REG_ADDR: PHY_ADDR;
+    end
+    REG_ADDR: begin
+        MDIO_OUT <= T_DATA[contador]; 
+        state <= contador == 18? TURNAROUND : REG_ADDR;
+    end
+    TURNAROUND: begin
+        MDIO_OUT <= T_DATA[29]?  1'bz : T_DATA[contador];
+        state <= contador == 16? T_DATA[29]? READ_DATA: WRITE_DATA: TURNAROUND;  
+    end
+    WRITE_DATA: begin
+        MDIO_OUT <= T_DATA[contador]; 
+        state <= contador == 0 ?  IDLE: WRITE_DATA;
+    end
+    READ_DATA: begin
+        
+        data_reg[contador] <= MDIO_IN; 
+        state <= DATA_RDY?  IDLE: READ_DATA;
+        DATA_RDY <= contador == 0 ? 1: 0;
+        RD_DATA <= DATA_RDY ? data_reg: RD_DATA;
+        MDIO_OUT <= 1'bz;
+        MDIO_OE <= 0;
+    end
+    endcase
     contador <= state == IDLE ? 5'd31 : contador - 1;
 end
 

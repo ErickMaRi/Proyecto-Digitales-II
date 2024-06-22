@@ -58,12 +58,12 @@ module controller_tb;
         .MDIO_OE(MDIO_OE),
         .MDIO_OUT(MDIO_OUT)
     );
-
     // Generar señal de reloj
     initial begin
         CLK = 0;
         forever #5 CLK = ~CLK; // Reloj de 100 MHz
     end
+    
 
     // Inicializar y ejecutar pruebas
     initial begin
@@ -71,15 +71,15 @@ module controller_tb;
         $dumpvars(0, controller_tb);
 
         // Inicialización
-        RESET = 1; MDIO_START = 0; MDIO_IN = 0; T_DATA = 0;
+        RESET = 0; MDIO_START = 0; MDIO_IN = 0; T_DATA = 0;
         operation = 2'b00; phy_addr = 5'b00000;
         reg_addr = 5'b00000; ta = 2'b00; data = 16'b0000000000000000;
-        #10 RESET = 0;
+        #10 RESET = 1;
 
         // Test de escritura
         phy_addr = 5'b00001;
         reg_addr = 5'b00010;
-        data = 16'hABCD;
+        data = 16'h3C33;
         operation = 2'b01; // Operación de escritura
         ta = 2'b00;
         MDIO_START = 1'b1;
@@ -100,13 +100,15 @@ module controller_tb;
         T_DATA = {2'b01, operation, phy_addr, reg_addr, ta, data};
         MDIO_START = 1'b1;
         #10 MDIO_START = 1'b0;
-        #160 MDIO_IN = 1'b1;
+        #325 MDIO_IN = 1'b1;
         #40 MDIO_IN = 1'b0;
         #80 MDIO_IN = 1'b1;
         #40 MDIO_IN = 1'b0;
+        #40 MDIO_IN = 1'b1;
+        #40 MDIO_IN = 1'b0;
 
         // Esperar la duración de SEND + RECEIVE
-        #1290; // (640 ns * 2) para SEND + RECEIVE + 10 ns de margen
+        #1290 RESET= 0; // (640 ns * 2) para SEND + RECEIVE + 10 ns de margen
 
         // Conclusión
         #50; // Tiempo adicional antes de finalizar la simulación
