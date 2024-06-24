@@ -9,16 +9,25 @@
 Autores: 
         Brenda Romero Solano  brenda.romero@ucr.ac.cr
 
-Fecha: [fecha de modificación] 
+Fecha:23/06/2024
     
 *********************************************************** */ 
 
 
 //! @title Controlador MDIO
 /**
- * Descripción pendiente.
+ * Controlador MDIO para operaciones de lectura y escritura en un dispositivo PHY.
+ *
+ * El módulo mdio_controller implementa un controlador MDIO que permite realizar
+ * operaciones de lectura y escritura en un dispositivo PHY. El controlador se
+ * encarga de generar las señales de control y datos necesarias para comunicarse 
+ * con el dispositivo PHY.
+ * El controlador MDIO implementa una máquina de estados finitos para controlar
+ * el flujo de la operación. El controlador MDIO utiliza un reloj MDIO (MDC) para
+ * sincronizar la comunicación con el dispositivo PHY. El reloj MDIO se genera a 
+ * partir del reloj de sistema y se utiliza para controlar la transmisión y recepción
+ * de datos MDIO.
  */
-
 `timescale 1ns / 1ps
 
 
@@ -48,13 +57,14 @@ localparam IDLE = 0,          // Espera una transacción MDIO.
 // Variables de control del estado
 reg [4:0] contador;     // Contador para el seguimiento de bits
 reg [2:0] state;        // Estado actual del controlador MDIO
-reg [15:0] data_reg;     // Registro de dirección del registro
+reg [15:0] data_reg;    // Registro de datos MDIO
+
 // Generación del reloj MDIO (MDC)
 always @(posedge CLK) begin
     if (~RESET) begin
         MDC <= 0;
     end else if (state != IDLE) begin
-        MDC <= ~MDC; // Toggle MDC en cada ciclo de reloj
+        MDC <= ~MDC;
     end else begin
         MDC <= 0;
         RD_DATA <= 0;
@@ -126,6 +136,7 @@ always @(posedge MDC) begin
         MDIO_OUT <= 1'bz;
         MDIO_OE <= 0;
     end
+    default : state <= IDLE;
     endcase
     contador <= state == IDLE ? 5'd31 : contador - 1;
 end
