@@ -89,6 +89,7 @@ Transacción Escrita: 01 01 00001 00010 10 0000000000001100
 ```
 Transacción Lectura: 01 10 00001 00010 10 [datos]
 ```
+### Controlador MDIO 🎛️
 
 ### Controlador MDIO
 
@@ -98,45 +99,42 @@ Transacción Lectura: 01 10 00001 00010 10 [datos]
 El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las transacciones de lectura y escritura con los dispositivos PHY (periféricos) conectados. Implementa una máquina de estados finita (FSM) para controlar el flujo de la transacción y generar las señales de control adecuadas.
 
 #### Entradas ⚙️
-- **CLK:** Entrada que llega al controlador desde el CPU con una frecuencia determinada. (1 bit) (Señal hacia el CPU y SW)
-- **RESET:** Entrada de reinicio del generador. Si **RESET=1** el generador funciona normalmente, de lo contrario vuelve al estado inicial y *todas las salidas toman el valor de cero*. (1 bit) (Señal hacia el CPU y SW)
-- **MDIO_START:** Pulso de un ciclo de reloj. Indica al generador que se ha cargado un valor en la entrada **T_DATA** y que se debe iniciar la transmisión de los datos a través de la salida serial (**MDIO_OUT**). (1 bit) (Señal hacia el CPU y SW)
-- **T_DATA:** Entrada paralela. Cuando se habilita **MDIO_START** en el siguiente ciclo de reloj se transmite el bit **T_DATA** por la salida **MDIO_OUT** y durante los siguientes ciclos se transmite un bit por ciclo hasta completar el envío de la palabra completa. (32 bit) (Señal hacia el CPU y SW)
-- **MDIO_IN:** Entrada serial. Durante una operación de lectura, se debe leer el valor de esta entrada durante los últimos 16  ciclos de la transacción MDIO y escribirlos en la salida **RD_DATA**. (1 bit) (Señal hacia los periféricos)
+- **CLK:** Entrada de reloj del sistema. (1 bit)
+- **RESET:** Entrada de reinicio del controlador. Si **RESET=0** el controlador vuelve al estado inicial y todas las salidas toman el valor de cero. (1 bit)
+- **MDIO_START:** Pulso de un ciclo de reloj. Indica al controlador que se ha cargado un valor en la entrada **T_DATA** y que se debe iniciar la transmisión de los datos. (1 bit)
+- **T_DATA:** Entrada paralela de 32 bits. Contiene la trama MDIO completa a transmitir. (32 bits)
+- **MDIO_IN:** Entrada serial. Durante una operación de lectura, se lee el valor de esta entrada durante los últimos 16 ciclos de la transacción MDIO. (1 bit)
 
 #### Salidas 📤
-- **RD_DATA:** Esta salida debe producir los 16 bits que se reciben desde el lado del periférico durante una transacción de lectura recibida en **MDIO_IN**. El valor de **RD_DATA** solo es válido cuando **DATA_RDY** es igual a 1. (16 bit) (Señal hacia el CPU y SW)
-- **DATA_RDY:** Salida que se pone en 1 cuando se ha completado la recepción de una palabra serial complerta durante una transacción de lectura. (1 bit) (Señal hacia el CPU y SW)
-- **MDC:** Salida de reloj para el MDIO, que deberá temer una frecuencia *de la mitad de la frecuencia de entrada* del **CLK**. Se debe generar MDC con la frecuencia correcta para cualquier valor de la frecuencia de entrada **CLK**. (1 bit) (Señal hacia los periféricos)
-- **MDIO_OE:** Habilitación de la salida **MDIO_OUT**. Debe detectar si la transacción es de lectura o escritura. Si la transacción es de *escritura*, debe permanecer en *alto durante 32 ciclos* de la transacción y ponerse en bajo cuando termine. En una transacción de *lectura*, debe permanecer en *alto durante primeros 16 ciclos* y luego *bajo durante los finales 16 ciclos*, mientras se recibe el dato en **MDIO_IN**, la señal debe ser cero. (1 bit) (Señal hacia los periféricos)
-- **MDIO_OUT:** *Salida serial*. Cuando se habilita **MDIO_START=1**, se envía a través de la salida **MDIO_OUT** los bits que se observan en la entrada T_DATA, empezando por el bit más significativo y hasta completar los 32 bits. (1 bit) (Señal hacia los periféricos)
+- **RD_DATA:** Esta salida produce los 16 bits que se reciben desde el lado del periférico durante una transacción de lectura. El valor de **RD_DATA** solo es válido cuando **DATA_RDY** es igual a 1. (16 bits)
+- **DATA_RDY:** Salida que se pone en 1 cuando se ha completado la recepción de una palabra serial completa durante una transacción de lectura. (1 bit)
+- **MDC:** Salida de reloj para el MDIO, que tiene una frecuencia de la mitad de la frecuencia de entrada del **CLK**. (1 bit)
+- **MDIO_OE:** Habilitación de la salida **MDIO_OUT**. Indica si el controlador está transmitiendo datos. (1 bit)
+- **MDIO_OUT:** Salida serial. Transmite los bits de la trama MDIO durante una transacción. (1 bit)
 
 #### Registros Internos 💾
-- **contador:** Registro que cuenta la cantidad restante de ciclos de la señal MDC para completar las transferencias (5 bits).
-- **data_reg:** Registro que almacena los datos a recibir (16 bits).
-- **state:** Registro que se encarga de almacenar el estado de actual de la máquina (3 bits)
-
+- **contador:** Contador para el seguimiento de bits transmitidos/recibidos. (5 bits)
+- **state:** Registro que almacena el estado actual de la máquina de estados. (3 bits)
+- **data_reg:** Registro que almacena temporalmente los datos recibidos durante una lectura. (16 bits)
 
 #### Máquina de Estados 🏭
 1. **IDLE:** Estado inicial. Espera una transacción MDIO.
-2. **START:** Envio de los primeros dos bits del dato correspondientes al inicio de la transacción (01).
-3. **OP_CODE:** Envio de los dos bits del dato correspondientes al tipo de la operación a implementar. 
-4. **PHY_ADDR:** Envio de los cinco bits del dato correspondientes a la dirección dirección del dispositivo PHY.
-5. **REG_ADDR:** Envio de los cinco bits de la dirección del registro donde se guardan los datos.
-6. **TURNAROUND:** Envio de los 2 bits de espera para cambio de control del bus.
-7. **WRITE_DATA:** Envía los datos seriales a través de MDIO_OUT (en escritura).
-8. **READ_DATA:** Recibe los datos seriales desde MDIO_IN (en lectura) y los guarda en la variable data_reg para luego enviarlos en la salida RD_DATA.
+2. **START:** Transmite el código de inicio de la trama (01).
+3. **OP_CODE:** Transmite el código de operación (lectura o escritura).
+4. **PHY_ADDR:** Transmite la dirección del dispositivo PHY.
+5. **REG_ADDR:** Transmite la dirección del registro.
+6. **TURNAROUND:** Ciclo de espera para cambio de control del bus.
+7. **WRITE_DATA:** Transmite los datos en una operación de escritura.
+8. **READ_DATA:** Recibe los datos en una operación de lectura.
 
 #### Funcionamiento 🚀
-1. En el estado **IDLE**, el controlador mantiene todas las salidas apagadas
-2. Si se detecta el código de inicio (01), se pasa al estado **START**, donde se envian los primeros dos bits de la transferencia.
-3. En **OP_CODE**,se envian los dos bits de la  transferencia que corresponden al tipo de operación.
-4. En **PHY_ADDR** y **REG_ADDR**, se envian los datos de la dirección del dispositivo y el registro.
-5. En **TURNAROUND**, se espera un ciclo para el cambio de control del bus.(Se pone la salida en alta impedancia si se detecta una opción de lectura)
-6. En **WRITE_DATA**, se envían serialmente los datos a través de MDIO_OUT.
-7. En **READ_DATA**, se reciben serialmente los datos desde MDIO_IN y se almacenan en data_reg para luego enviarlos e la salida RD_DATA y activar por un ciclo RDY_DATA.
-8. Al finalizar la transacción, se vuelve al estado **IDLE**.
-![Image](Figures\Controller_FSM_1.svg)
+1. En el estado **IDLE**, el controlador espera la señal **MDIO_START** para iniciar una transacción.
+2. Al recibir **MDIO_START**, pasa al estado **START** y comienza a transmitir la trama MDIO bit por bit.
+3. El controlador avanza por los estados **OP_CODE**, **PHY_ADDR**, y **REG_ADDR**, transmitiendo las partes correspondientes de la trama.
+4. En **TURNAROUND**, prepara el bus para escribir o leer datos.
+5. En **WRITE_DATA**, transmite los datos de escritura.
+6. En **READ_DATA**, recibe los datos de lectura y los almacena en **data_reg**.
+7. Al finalizar la transacción, vuelve al estado **IDLE** y activa **DATA_RDY** si fue una lectura.
 
 ### Periférico MDIO 🖧
 
