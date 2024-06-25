@@ -93,6 +93,8 @@ Fecha: 23/06/2024
          #40 MDIO_IN = 1'b0;
          #40 MDIO_IN = 1'b1;
          #40 MDIO_IN = 1'b0;
+         #20 MDIO_IN = 1'b1;
+         #50 MDIO_IN = 1'b0;
  
 // Prueba 03 - Test reinicio
 
