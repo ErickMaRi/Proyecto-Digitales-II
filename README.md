@@ -136,6 +136,10 @@ El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las
 6. En **READ_DATA**, recibe los datos de lectura y los almacena en **data_reg**.
 7. Al finalizar la transacción, vuelve al estado **IDLE** y activa **DATA_RDY** si fue una lectura.
 
+
+![Image](Figures\Controller_FSM_1.svg)
+
+
 ### Periférico MDIO 🖧
 
 #### Descripción 📝
