@@ -90,7 +90,9 @@ Transacción Escrita: 01 01 00001 00010 10 0000000000001100
 Transacción Lectura: 01 10 00001 00010 10 [datos]
 ```
 
-### Controlador MDIO 🎛️
+### Controlador MDIO
+
+![Image](Figures\mdio_controller.svg)
 
 #### Descripción 📝
 El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las transacciones de lectura y escritura con los dispositivos PHY (periféricos) conectados. Implementa una máquina de estados finita (FSM) para controlar el flujo de la transacción y generar las señales de control adecuadas.
@@ -110,28 +112,31 @@ El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las
 - **MDIO_OUT:** *Salida serial*. Cuando se habilita **MDIO_START=1**, se envía a través de la salida **MDIO_OUT** los bits que se observan en la entrada T_DATA, empezando por el bit más significativo y hasta completar los 32 bits. (1 bit) (Señal hacia los periféricos)
 
 #### Registros Internos 💾
-- **address_reg:** Registro que almacena la dirección del dispositivo PHY y el registro a leer/escribir (5 bits).
-- **data_reg:** Registro que almacena los datos a enviar o recibir (16 bits).
+- **contador:** Registro que cuenta la cantidad restante de ciclos de la señal MDC para completar las transferencias (5 bits).
+- **data_reg:** Registro que almacena los datos a recibir (16 bits).
+- **state:** Registro que se encarga de almacenar el estado de actual de la máquina (3 bits)
+
 
 #### Máquina de Estados 🏭
 1. **IDLE:** Estado inicial. Espera una transacción MDIO.
-2. **START:** Detecta el código de inicio de la trama (01).
-3. **OP_CODE:** Determina si la operación es lectura (10) o escritura (01).
-4. **PHY_ADDR:** Carga la dirección del dispositivo PHY en address_reg.
-5. **REG_ADDR:** Carga la dirección del registro en address_reg.
-6. **TURNAROUND:** Ciclo de espera para cambio de control del bus.
+2. **START:** Envio de los primeros dos bits del dato correspondientes al inicio de la transacción (01).
+3. **OP_CODE:** Envio de los dos bits del dato correspondientes al tipo de la operación a implementar. 
+4. **PHY_ADDR:** Envio de los cinco bits del dato correspondientes a la dirección dirección del dispositivo PHY.
+5. **REG_ADDR:** Envio de los cinco bits de la dirección del registro donde se guardan los datos.
+6. **TURNAROUND:** Envio de los 2 bits de espera para cambio de control del bus.
 7. **WRITE_DATA:** Envía los datos seriales a través de MDIO_OUT (en escritura).
-8. **READ_DATA:** Recibe los datos seriales desde MDIO_IN (en lectura).
+8. **READ_DATA:** Recibe los datos seriales desde MDIO_IN (en lectura) y los guarda en la variable data_reg para luego enviarlos en la salida RD_DATA.
 
 #### Funcionamiento 🚀
-1. En el estado **IDLE**, el controlador espera una transacción MDIO válida.
-2. Si se detecta el código de inicio (01), se pasa al estado **START**.
-3. En **OP_CODE**, se determina si la operación es lectura o escritura.
-4. En **PHY_ADDR** y **REG_ADDR**, se carga la dirección completa en address_reg.
-5. En **TURNAROUND**, se espera un ciclo para el cambio de control del bus.
-6. En **WRITE_DATA**, se envían serialmente los datos desde data_reg a través de MDIO_OUT.
-7. En **READ_DATA**, se reciben serialmente los datos desde MDIO_IN y se almacenan en data_reg.
+1. En el estado **IDLE**, el controlador mantiene todas las salidas apagadas
+2. Si se detecta el código de inicio (01), se pasa al estado **START**, donde se envian los primeros dos bits de la transferencia.
+3. En **OP_CODE**,se envian los dos bits de la  transferencia que corresponden al tipo de operación.
+4. En **PHY_ADDR** y **REG_ADDR**, se envian los datos de la dirección del dispositivo y el registro.
+5. En **TURNAROUND**, se espera un ciclo para el cambio de control del bus.(Se pone la salida en alta impedancia si se detecta una opción de lectura)
+6. En **WRITE_DATA**, se envían serialmente los datos a través de MDIO_OUT.
+7. En **READ_DATA**, se reciben serialmente los datos desde MDIO_IN y se almacenan en data_reg para luego enviarlos e la salida RD_DATA y activar por un ciclo RDY_DATA.
 8. Al finalizar la transacción, se vuelve al estado **IDLE**.
+![Image](Figures\Controller_FSM_1.svg)
 
 ### Periférico MDIO 🖧
 
