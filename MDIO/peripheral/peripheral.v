@@ -26,96 +26,73 @@ module peripheral (
     input wire MDIO_OUT,        // Señal de datos MDIO enviados
     output reg [4:0] ADDR,      // Dirección
     output reg [15:0] WR_DATA,  // Datos de escritura
-    output reg MDIO_DONE,      // Señal de finalización de transacción MDIO
-    output reg WR_STB,         // Señal de escritura
+    output reg MDIO_DONE,       // Señal de finalización de transacción MDIO
+    output reg WR_STB,          // Señal de escritura
     output reg MDIO_IN          // Datos MDIO recibidos
 );
 
-// Declaración de estados
-localparam IDLE = 3'b000,               // Espera una transacción MDIO.
-           CAPTURA_OP = 3'b001,         // Captura el bit de operación
-           CAPTURA_ADDR = 3'b010,       // Captura la dirección
-           CAPTURA_DATOS_WR = 3'b011,   // Captura los datos de escritura
-           ENVIAR_DATOS_RD = 3'b100,    // Envía los datos de lectura
-           FINALIZAR = 3'b101;          // Finaliza la transacción
+// Estados del controlador MDIO
+localparam IDLE = 0,          // Espera una transacción MDIO.
+           OP_CODE = 1,       // Determina si la operación es lectura (10) o escritura (01).
+           REG_ADDR = 2,      // Carga la dirección del registro en address_reg.
+           TURNAROUND = 3,    // Espera cambio de control del bus.
+           WRITE_DATA = 4,    // Envía los datos seriales (en escritura).
+           READ_DATA = 5;     // Recibe los datos seriales (en lectura).
 
-// Registros internos
-reg [2:0] estado_actual;             // Estado actual de la máquina de estados
-reg [2:0] estado_siguiente;          // Estado siguiente de la máquina de estados
-reg [5:0] bit_cnt;                   // Contador de bits
-reg [4:0] reg_addr;                  // Dirección capturada
-reg [15:0] reg_datos;                // Datos capturados
-reg op_bit;                          // Bit de operación capturado
+// Variables de control del estado
+reg [4:0] bit_cnt;     // Contador para el seguimiento de bits
+reg [2:0] state;       // Estado actual del controlador MDIO
+reg op_bit;            // Bit de operación capturado
+reg [4:0] reg_addr;    // Dirección capturada
 
-// Máquina de estados
-always @(posedge MDC or posedge RESET) begin
-    if (RESET) begin
-        estado_actual <= IDLE;
-        bit_cnt <= 6'd0;
-        reg_addr <= 5'd0;
-        reg_datos <= 16'd0;
-        MDIO_DONE <= 1'b0;
-        MDIO_IN <= 1'b0;
+// Lógica de control de estado
+always @(posedge MDC or negedge RESET) begin
+    if (~RESET) begin
         ADDR <= 5'd0;
         WR_DATA <= 16'd0;
-        WR_STB <= 1'b0;
+        MDIO_DONE <= 0;
+        WR_STB  <= 0;
+        MDIO_IN <= 0;
+        bit_cnt <= 5'd31;
+        state <= IDLE;
+        reg_addr <= 5'd0;
     end else begin
-        estado_actual <= estado_siguiente;
-        case (estado_actual)
-            IDLE: begin
-                if (MDIO_OE && MDIO_OUT) begin // Detección de inicio de transacción
-                    estado_siguiente <= CAPTURA_OP;
-                    bit_cnt <= 5'd1;
-                end else begin
-                    estado_siguiente <= IDLE;
-                end
-            end
-            CAPTURA_OP: begin
-                op_bit <= MDIO_OUT; // Captura el bit de operación
-                estado_siguiente <= CAPTURA_ADDR;
-                bit_cnt <= bit_cnt + 5'd1;
-            end
-            CAPTURA_ADDR: begin
-                reg_addr <= {reg_addr[3:0], MDIO_OUT}; // Captura la dirección
-                if (bit_cnt == 5'd6) begin
-                    if (op_bit) begin // Transacción de escritura
-                        estado_siguiente <= CAPTURA_DATOS_WR;
-                    end else begin // Transacción de lectura
-                        estado_siguiente <= ENVIAR_DATOS_RD;
-                    end
-                    bit_cnt <= bit_cnt + 5'd1;
-                end else begin
-                    bit_cnt <= bit_cnt + 5'd1;
-                end
-            end
-            CAPTURA_DATOS_WR: begin
-                reg_datos <= {reg_datos[14:0], MDIO_OUT}; // Captura los datos de escritura
-                if (bit_cnt == 5'd22) begin
-                    estado_siguiente <= FINALIZAR;
-                end else begin
-                    bit_cnt <= bit_cnt + 5'd1;
-                end
-            end
-            ENVIAR_DATOS_RD: begin
-                if (bit_cnt >= 5'd17 && bit_cnt <= 6'd32) begin
-                    MDIO_IN <= reg_datos[bit_cnt - 5'd17]; // Envía los datos de lectura
-                end
-                if (bit_cnt == 6'd32) begin
-                    estado_siguiente <= FINALIZAR;
-                end else begin
-                    bit_cnt <= bit_cnt + 5'd1;
-                end
-            end
-            FINALIZAR: begin
-                MDIO_DONE <= 1'b1; // Genera el pulso MDIO_DONE
-                ADDR <= reg_addr;
-                if (op_bit) begin // Transacción de escritura
-                    WR_DATA <= reg_datos;
-                    WR_STB <= 1'b1;
-                end
-                estado_siguiente <= IDLE;
-            end
+        // Lógica de transición de estado temporal
+        case (state)
+        IDLE: begin
+            ADDR <= 5'd0;
+            WR_DATA <= 16'd0;
+            MDIO_DONE <= 0;
+            WR_STB  <= 0;
+            MDIO_IN <= 0;
+            state <= MDIO_OE && MDIO_OUT ? OP_CODE: IDLE;
+        end 
+        OP_CODE: begin
+            op_bit <= bit_cnt == 29 ? MDIO_OUT: op_bit ;
+            state <= bit_cnt == 23? REG_ADDR: OP_CODE;
+        end
+        REG_ADDR: begin
+            reg_addr <= bit_cnt > 18? {reg_addr[3:0], MDIO_OUT}: reg_addr; 
+            state <= bit_cnt == 18? TURNAROUND : REG_ADDR;
+        end
+        TURNAROUND: begin
+            state <= bit_cnt == 16? op_bit? READ_DATA: WRITE_DATA: TURNAROUND;  
+        end
+        WRITE_DATA: begin
+            WR_DATA[bit_cnt] <= MDIO_OUT;
+            WR_STB  <= bit_cnt == 0 ? 1: 0;
+            MDIO_DONE <= bit_cnt == 0 ? 1: 0;
+            state <= bit_cnt == 0 ?  IDLE: WRITE_DATA;
+        end
+        READ_DATA: begin
+            MDIO_DONE <= bit_cnt == 0 ? 1: 0;
+            state <= bit_cnt == 0 ? IDLE: READ_DATA;
+        end
+        default : state <= IDLE;
         endcase
+        bit_cnt <= state == IDLE ? ~MDIO_OE ? 5'd31 : bit_cnt - 1: bit_cnt - 1;
+        assign ADDR = state == TURNAROUND ? reg_addr: ADDR;
+        assign MDIO_IN = state == READ_DATA ? RD_DATA[bit_cnt]: MDIO_IN;
     end
 end
 

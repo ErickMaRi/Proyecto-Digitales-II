@@ -15,13 +15,10 @@ Fecha: [fecha de modificación]
 
 
 //! @title Testbench del periférico del MDIO
-/**
+/**Acá esta el código por si lo necesitas
  * Descripción pendiente.
  */
-`include "peripheral/peripheral.v"
-`timescale 1ns / 1ps
-
-module peripheral_tb;
+/*module peripheral_tb;
 
 // Declaración de señales
  // Inputs
@@ -206,3 +203,53 @@ always @(posedge MDC) begin
 end
 
 endmodule
+*/
+
+ `include "peripheral/peripheral.v"
+ `include "peripheral/peripheral_tester.v"
+ 
+ module peripheral_tb;
+ 
+     // Inputs del controlador MDIO
+    wire RESET,MDC,MDIO_OE,MDIO_OUT;          
+    wire [15:0] RD_DATA; 
+    wire [4:0] ADDR;      
+    wire [15:0] WR_DATA; 
+    wire MDIO_DONE,WR_STB,MDIO_IN;     
+ 
+     // Instancia del controlador MDIO
+    peripheral dut (
+         .RESET(RESET),
+         .RD_DATA(RD_DATA),
+         .MDC(MDC),
+         .MDIO_OE(MDIO_OE),
+         .MDIO_OUT(MDIO_OUT),
+         .ADDR(ADDR),
+         .WR_DATA(WR_DATA),
+         .MDIO_DONE(MDIO_DONE),
+         .WR_STB(WR_STB),
+         .MDIO_IN(MDIO_IN)
+     );
+      
+     // Instancia del tester del controlador MDIO
+     peripheral_tester tester (
+         .RESET(RESET),
+         .RD_DATA(RD_DATA),
+         .MDC(MDC),
+         .MDIO_OE(MDIO_OE),
+         .MDIO_OUT(MDIO_OUT),
+         .ADDR(ADDR),
+         .WR_DATA(WR_DATA),
+         .MDIO_DONE(MDIO_DONE),
+         .WR_STB(WR_STB),
+         .MDIO_IN(MDIO_IN)
+     );
+     
+     // Inicializar y ejecutar pruebas
+     initial begin
+         $dumpfile("sim.vcd");
+         $dumpvars(0, peripheral_tb);
+     end
+ 
+ endmodule
+ 
