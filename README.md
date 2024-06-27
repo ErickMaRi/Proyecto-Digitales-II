@@ -93,7 +93,8 @@ Transacción Lectura: 01 10 00001 00010 10 [datos]
 
 ### Controlador MDIO
 
-![Image](Figures\mdio_controller.svg)
+![MDIO Controller](https://github.com/ErickMaRi/Proyecto-Digitales-II/raw/main/Figures/mdio_controller.svg)
+
 
 #### Descripción 📝
 El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las transacciones de lectura y escritura con los dispositivos PHY (periféricos) conectados. Implementa una máquina de estados finita (FSM) para controlar el flujo de la transacción y generar las señales de control adecuadas.
@@ -137,7 +138,8 @@ El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las
 7. Al finalizar la transacción, vuelve al estado **IDLE** y activa **DATA_RDY** si fue una lectura.
 
 
-![Image](Figures\Controller_FSM.svg)
+![Controller FSM](https://github.com/ErickMaRi/Proyecto-Digitales-II/raw/main/Figures/Controller_FSM.svg)
+
 
 
 ### Periférico MDIO 🖧
@@ -146,7 +148,7 @@ El controlador MDIO es el encargado de manejar el protocolo MDIO y gestionar las
 El periférico MDIO actúa como un receptor de transacciones MDIO de acuerdo con las especificaciones estipuladas en la cláusula 22 del estándar IEEE 802.3. Una memoria que almacena y recupera registros según las transacciones MDIO recibidas. Implementa un arreglo de memoria y lógica para manejar las operaciones de lectura y escritura. Funciona como una interfaz entre el PHY y el controlador.
 
 #### Entradas ⚙️
-- **RESET:** Entrada de reinicio del generador. Si **RESET=1** el generador funciona normalmente. En caso contrario, el enerador vuelve a su estado inicial y todas las salidas toman el valor de cero. (1 bit) (Señal controlada por el testbench o sistema en el que se declara)
+- **RESET:** Entrada de reinicio del generador. Si **RESET=1** el generador funciona normalmente. En caso contrario, el generador vuelve a su estado inicial y todas las salidas toman el valor de cero. (1 bit) (Señal controlada por el testbench o sistema en el que se declara)
 - **RD_DATA:** Entrada de datos. Contiene el valor leído desde la memoria, a más tardar dos ciclos de MDC después de que se cumple que **MDIO_DONE=1** y **WR_STB=0**. (16 bit) (Señal hacia PHY)
 - **MDC:** Entrada de reloj para el MDIO. El flanco activo de la señal MDC es el flanco creciente. Esta entrada debe provenir de un generador de MDIO, o al menos modelar su comportamiento. (1 bit) (Señal hacia el controlador)
 - **MDIO_OE:** Habilitación de **MDIO_OUT**. Esta entrada debe detectar si el valor de **MDIO_OUT** que se está recibiendo es un valor válido habilitado. En una transacción de escritura, debe permanecer en alto durante los 32 ciclos de la transacción, pero ponerse en bajo al terminar la transacción. En una transacción de lectura, debe permanecer en alto durante los primeros 16 ciclos de la transacción, pero debe ponerse en cero durante los siguientes 16 ciclos, mientras el receptor envía el dato de **MDIO_IN**. Al final de la transacción de lectura, se espera que esta entrada debe permanecer en cero. (1 bit) (Señal hacia el controlador)
@@ -164,6 +166,8 @@ El periférico MDIO actúa como un receptor de transacciones MDIO de acuerdo con
 2. Cuando se recibe una transacción de lectura, los datos almacenados en la dirección de memoria especificada por ADDR se cargan en RD_DATA y se envían al controlador MDIO.
 3. Las operaciones de lectura y escritura se sincronizan con las señales de control del controlador MDIO.
 4. El periférico no realiza ninguna operación adicional además de almacenar y recuperar los registros según las transacciones MDIO.
+
+![Peripheral FSM](https://github.com/ErickMaRi/Proyecto-Digitales-II/raw/main/Figures/peripherall_FSM_0.svg)
 
 Aquí está la documentación del módulo PHY en el estilo del README:
 
