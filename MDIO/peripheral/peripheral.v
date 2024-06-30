@@ -9,14 +9,17 @@
 Autores: 
         Brenda Romero Solano  brenda.romero@ucr.ac.cr
 
-Fecha: [fecha de modificación] 
+Fecha: 30/6/2024
     
 *********************************************************** */ 
 
 
 //! @title Periférico MDIO
 /**
- * Descripción pendiente.
+ * El módulo peripheral es un módulo en Verilog que implementa la comunicación con un dispositivo periférico.
+ * Este implementa diferentes estados para manejar las operaciones de lectura y escritura. El módulo utiliza registros
+ * y lógica de control para gestionar la transición entre los diferentes estados y realizar las operaciones correspondientes.
+ * También se utiliza un contador de bits para rastrear el progreso de la transmisión de datos.
  */
 module peripheral (
     input wire RESET,           // Señal de RESET
@@ -24,11 +27,11 @@ module peripheral (
     input wire MDC,             // Señal de reloj del protocolo MDIO
     input wire MDIO_OE,         // Señal de habilitación de salida MDIO_OUT
     input wire MDIO_OUT,        // Señal de datos MDIO enviados
-    output reg [4:0] ADDR,      // Dirección
+    output reg [4:0] ADDR,      // Dirección de registro
     output reg [15:0] WR_DATA,  // Datos de escritura
     output reg MDIO_DONE,       // Señal de finalización de transacción MDIO
     output reg WR_STB,          // Señal de escritura
-    output reg MDIO_IN          // Datos MDIO recibidos
+    output reg MDIO_IN          // Datos MDIO recibidos de phy
 );
 
 // Estados del controlador MDIO
@@ -57,7 +60,8 @@ always @(posedge MDC or negedge RESET) begin
         state <= IDLE;
         reg_addr <= 5'd0;
     end else begin
-        // Lógica de transición de estado temporal
+
+        // Lógica de transición de estado
         case (state)
         IDLE: begin
             ADDR <= 5'd0;
@@ -65,6 +69,8 @@ always @(posedge MDC or negedge RESET) begin
             MDIO_DONE <= 0;
             WR_STB  <= 0;
             MDIO_IN <= 0;
+            reg_addr <= 5'd0;
+            op_bit <= 0;
             state <= MDIO_OE && MDIO_OUT ? OP_CODE: IDLE;
         end 
         OP_CODE: begin
@@ -76,23 +82,25 @@ always @(posedge MDC or negedge RESET) begin
             state <= bit_cnt == 18? TURNAROUND : REG_ADDR;
         end
         TURNAROUND: begin
-            state <= bit_cnt == 16? op_bit? READ_DATA: WRITE_DATA: TURNAROUND;  
+            state <= bit_cnt == 16 ? op_bit? READ_DATA: WRITE_DATA: TURNAROUND; 
+            ADDR  <= bit_cnt == 16 && op_bit ? reg_addr: 5'd0;
         end
         WRITE_DATA: begin
-            WR_DATA[bit_cnt] <= MDIO_OUT;
+            WR_DATA[bit_cnt] <= bit_cnt != 31 ?  MDIO_OUT:0;
             WR_STB  <= bit_cnt == 0 ? 1: 0;
             MDIO_DONE <= bit_cnt == 0 ? 1: 0;
-            state <= bit_cnt == 0 ?  IDLE: WRITE_DATA;
+            ADDR  <= bit_cnt == 0? reg_addr: 5'd0;
+            state <= bit_cnt == 31 ? IDLE: WRITE_DATA;
         end
         READ_DATA: begin
             MDIO_DONE <= bit_cnt == 0 ? 1: 0;
-            state <= bit_cnt == 0 ? IDLE: READ_DATA;
+            MDIO_IN <=  bit_cnt != 31 ? RD_DATA[bit_cnt]: 0;
+            ADDR  <= bit_cnt == 31? 5'd0 : reg_addr;
+            state <= bit_cnt == 31 ? IDLE: READ_DATA;
         end
         default : state <= IDLE;
         endcase
         bit_cnt <= state == IDLE ? ~MDIO_OE ? 5'd31 : bit_cnt - 1: bit_cnt - 1;
-        assign ADDR = state == TURNAROUND ? reg_addr: ADDR;
-        assign MDIO_IN = state == READ_DATA ? RD_DATA[bit_cnt]: MDIO_IN;
     end
 end
 

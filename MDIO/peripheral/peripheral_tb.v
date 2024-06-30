@@ -9,7 +9,7 @@
 Autores: 
         Brenda Romero Solano  brenda.romero@ucr.ac.cr
 
-Fecha: [fecha de modificación] 
+Fecha: 30/6/2024
     
 *********************************************************** */ 
 
@@ -207,17 +207,29 @@ endmodule
 
  `include "peripheral/peripheral.v"
  `include "peripheral/peripheral_tester.v"
- 
+
+/**
+ * @title Testbench del periférico del MDIO
+ * 
+ * Este es el testbench del periférico del MDIO. El MDIO (Management Data Input/Output)
+ * es un estándar de comunicación utilizado en sistemas de comunicación de alta velocidad
+ * para la configuración y supervisión de dispositivos de red. Este testbench se utiliza 
+ * para probar el funcionamiento del periférico MDIO.
+ * El testbench instancia el periférico MDIO  y el tester del periférico para realizar las pruebas.
+ * 
+ * El testbench también incluye una inicialización para generar un archivo VCD 
+ * (Value Change Dump) y guardar las variables del testbench en ese archivo.
+ */
  module peripheral_tb;
  
-     // Inputs del controlador MDIO
+     // Inputs del periférico MDIO
     wire RESET,MDC,MDIO_OE,MDIO_OUT;          
     wire [15:0] RD_DATA; 
     wire [4:0] ADDR;      
     wire [15:0] WR_DATA; 
     wire MDIO_DONE,WR_STB,MDIO_IN;     
  
-     // Instancia del controlador MDIO
+     // Instancia del periférico MDIO
     peripheral dut (
          .RESET(RESET),
          .RD_DATA(RD_DATA),
@@ -231,7 +243,7 @@ endmodule
          .MDIO_IN(MDIO_IN)
      );
       
-     // Instancia del tester del controlador MDIO
+     // Instancia del tester del periférico MDIO
      peripheral_tester tester (
          .RESET(RESET),
          .RD_DATA(RD_DATA),

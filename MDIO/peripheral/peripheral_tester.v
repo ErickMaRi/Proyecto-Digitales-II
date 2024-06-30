@@ -9,13 +9,19 @@
 Autores: 
         Brenda Romero Solano  brenda.romero@ucr.ac.cr
 
-Fecha: 
+Fecha: 30/6/2024
     
 *********************************************************** */ 
 
 
 //! @title Tester del controlador MDIO
 /**
+ * El módulo peripheral_tester es un componente diseñado para probar y verificar
+ * el funcionamiento del controlador MDIO en un sistema digital. Este módulo simula
+ * las operaciones de escritura y lectura en el bus MDIO, generando las señales
+ * necesarias para comunicarse con un dispositivo periférico. Además, permite
+ * reiniciar el controlador y monitorear las señales relevantes para depurar y
+ * analizar el comportamiento del sistema.
  */
  
  `timescale 1ns / 1ps
@@ -51,6 +57,7 @@ Fecha:
  
 // Prueba 01 - Test de escritura ¿cuando envio la info de ADDR?
          MDIO_OE = 1'b1;
+         //Bits de inicio
          MDIO_OUT = 0;
          #10 MDIO_OUT = 1'b1; // Iniciar la trama
          #10 MDIO_OUT = 1'b0;
@@ -58,11 +65,12 @@ Fecha:
          #10 MDIO_OUT = 1'b0;
          #60 MDIO_OUT = 1'b1;
          #20 MDIO_OUT = 1'b0;
-         #20 MDIO_OE = 1'b1;
-         #80 MDIO_OUT = 1'b1;
-         #50 MDIO_OUT = 1'b0;
-         #50 MDIO_OE = 1'b0;
-         #20; // Tiempo antes de iniciar la siguiente transacción
+         #30 MDIO_OUT = 1'b1;
+         #80 MDIO_OUT = 1'b0;
+         #50 MDIO_OUT = 1'b1;
+         #40 MDIO_OE = 1'b0;
+         MDIO_OUT = 1'b0;
+         #70; // Tiempo antes de iniciar la siguiente transacción
 
 // Prueba 02 - Test de lectura
 
@@ -74,9 +82,10 @@ Fecha:
          #10 MDIO_OUT = 1'b0;
          #60 MDIO_OUT = 1'b1;
          #20 MDIO_OUT = 1'b0;
-         #25 RD_DATA = 16'b1010101010101010;
-         #5 MDIO_OE = 1'b0;
-         RD_DATA = 16'b1010101010101010; //Problema con el primer bit
+         #20 MDIO_OUT = 1'b1;
+         #10 MDIO_OUT = 1'b0;
+         RD_DATA = 16'b1010101010101011;
+         MDIO_OE = 1'b0;
          #180; // Tiempo antes de iniciar la siguiente transacción
  
 // Prueba 03 - Test reinicio
