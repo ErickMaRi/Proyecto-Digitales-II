@@ -86,17 +86,17 @@ always @(posedge MDC or negedge RESET) begin
             ADDR  <= bit_cnt == 16 && op_bit ? reg_addr: 5'd0;
         end
         WRITE_DATA: begin
-            WR_DATA[bit_cnt] <= bit_cnt != 31 ?  MDIO_OUT:0;
-            WR_STB  <= bit_cnt == 0 ? 1: 0;
-            MDIO_DONE <= bit_cnt == 0 ? 1: 0;
-            ADDR  <= bit_cnt == 0? reg_addr: 5'd0;
-            state <= bit_cnt == 31 ? IDLE: WRITE_DATA;
+            WR_DATA[bit_cnt] <= bit_cnt < 30 ?  MDIO_OUT:0;
+            WR_STB  <= bit_cnt == 31 ? 1: 0;
+            MDIO_DONE <= bit_cnt == 31 ? 1: 0;
+            ADDR  <= bit_cnt == 31? reg_addr: 5'd0;
+            state <= bit_cnt == 30 ? IDLE: WRITE_DATA;
         end
         READ_DATA: begin
-            MDIO_DONE <= bit_cnt == 0 ? 1: 0;
-            MDIO_IN <=  bit_cnt != 31 ? RD_DATA[bit_cnt]: 0;
-            ADDR  <= bit_cnt == 31? 5'd0 : reg_addr;
-            state <= bit_cnt == 31 ? IDLE: READ_DATA;
+            MDIO_DONE <= bit_cnt == 31 ? 1: 0;
+            MDIO_IN <=  bit_cnt < 30 ? RD_DATA[bit_cnt]: 0;
+            ADDR  <= bit_cnt == 30? 5'd0 : reg_addr;
+            state <= bit_cnt == 30 ? IDLE: READ_DATA;
         end
         default : state <= IDLE;
         endcase
