@@ -22,7 +22,7 @@ else
 
 endif
 # Testbench source files
-TESTBENCH_MDIO = MDIO_tb.v
+#TESTBENCH_MDIO = MDIO_tb.v
 
 # Simulator
 SIMULATOR = iverilog
@@ -32,7 +32,7 @@ SIMULATOR_FLAGS = -o
 WAVEFORM_VIEWER = gtkwave
 
 # Default target
-all: controller peripheral mdio clean
+all: controller peripheral clean
 
 # Compile Verilog files
 peripheral: sim_peripheral
@@ -41,8 +41,8 @@ peripheral: sim_peripheral
 controller: sim_controller
 	$(WAVEFORM_VIEWER) $(WAVEFROM)
 
-mdio: sim_mdio
-	$(WAVEFORM_VIEWER) $(WAVEFROM)
+#mdio: sim_mdio
+#$(WAVEFORM_VIEWER) $(WAVEFROM)
 
 # Simulation executables
 sim_peripheral: $(TESTBENCH_PERIPHERAL) $(PERIPHERAL)
@@ -52,9 +52,9 @@ sim_controller: $(TESTBENCH_CONTROLLER) $(CONTROLLER)
 	$(SIMULATOR) $(SIMULATOR_FLAGS) sim $(TESTBENCH_CONTROLLER)
 	vvp sim
 
-sim_mdio: $(TESTBENCH_MDIO) $(PERIPHERAL) $(CONTROLLER)
-	$(SIMULATOR) $(SIMULATOR_FLAGS) sim $(TESTBENCH_MDIO)
-	vvp sim
+#sim_mdio: $(TESTBENCH_MDIO) $(PERIPHERAL) $(CONTROLLER)
+#$(SIMULATOR) $(SIMULATOR_FLAGS) sim $(TESTBENCH_MDIO)
+#vvp sim
 
 # Clean up generated files
 clean:
